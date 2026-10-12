@@ -1,0 +1,26 @@
+# Environment variables
+.env
+!.env.example
+
+# IDE & Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Backend build
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Frontend build
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Application runtime uploads
+uploads/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
