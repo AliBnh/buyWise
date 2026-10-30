@@ -1,0 +1,6 @@
+target/
+.mvn/
+*.log
+uploads/
+.git/
+.gitignore
