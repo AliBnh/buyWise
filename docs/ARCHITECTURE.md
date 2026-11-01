@@ -248,7 +248,7 @@ BuyWise implements strict multi-tenancy at the software and query levels:
 
 ### 5.2 Structured Output Guardrails
 - LLM outputs are forced into strict JSON syntax via Groq's `response_format: { type: "json_object" }`.
-- The [`StructuredOutputValidator`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/main/java/com/buywise/ai/validator/StructuredOutputValidator.java) performs schema conformity checks, stripping accidental markdown code blocks and validating required fields.
+- The [`StructuredOutputValidator`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/main/java/com/buywise/modules/ai/service/StructuredOutputValidator.java) performs schema conformity checks, stripping accidental markdown code blocks and validating required fields.
 
 ### 5.3 Human-in-the-Loop Document Verification
 When a user uploads a document:
