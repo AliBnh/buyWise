@@ -127,26 +127,26 @@ buywise/
 
 ## 🧼 Clean Code, SOLID & Design Patterns
 
-A complete in-depth defense is documented in [`docs/ENGINEERING_CONCEPTS.md`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/docs/ENGINEERING_CONCEPTS.md).
+A complete in-depth defense is documented in [`docs/ENGINEERING_CONCEPTS.md`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/docs/ENGINEERING_CONCEPTS.md).
 
 ### 1. Clean Code Implementation & Justification
 - **Meaningful Names & Domain Ubiquitous Language**: Method names reflect exact domain semantics (`calculateSummary`, `registerPurchaseDeadlines`, `verifyFact`) rather than generic CRUD terminology.
 - **Small, Single-Purpose Functions**: Functions average under 20 lines of code, adhering to single levels of abstraction.
 - **No Side Effects in Read Operations**: Queries are marked `@Transactional(readOnly = true)`, disabling Hibernate dirty-checking and preventing unintentional entity state modifications.
-- **Centralized Exception Handling**: [`GlobalExceptionHandler`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/main/java/com/buywise/common/exception/GlobalExceptionHandler.java) intercepts all exceptions, returning standardized RFC 7807 problem details.
+- **Centralized Exception Handling**: [`GlobalExceptionHandler`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/main/java/com/buywise/common/exception/GlobalExceptionHandler.java) intercepts all exceptions, returning standardized RFC 7807 problem details.
 
 ### 2. SOLID Principles with Code References
 | Principle | Implementation Reference | Architectural Justification |
 |---|---|---|
-| **S — Single Responsibility** | [`ComparisonEngineService`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/main/java/com/buywise/modules/comparison/service/ComparisonEngineService.java) | Computes strictly deterministic arithmetic. Never touches LLMs or multipart files. |
-| **O — Open/Closed** | [`ComparisonStrategy`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/main/java/com/buywise/modules/comparison/strategy/ComparisonStrategy.java) | New ranking strategies can be added by implementing the interface without modifying existing code. |
-| **L — Liskov Substitution** | [`LowestPriceStrategy`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/main/java/com/buywise/modules/comparison/strategy/LowestPriceStrategy.java), [`BestWarrantyStrategy`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/main/java/com/buywise/modules/comparison/strategy/BestWarrantyStrategy.java), etc. | All strategies fulfill the contract interchangeably without unexpected exceptions. |
-| **I — Interface Segregation** | [`LlmProvider`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/main/java/com/buywise/modules/ai/provider/LlmProvider.java) | Focused interface exposing only completion and structured output methods. |
-| **D — Dependency Inversion** | [`OfferAnalysisAiService`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/main/java/com/buywise/modules/ai/service/OfferAnalysisAiService.java) | Depends on the abstract `LlmProvider` interface, decoupling core logic from the Groq SDK. |
+| **S — Single Responsibility** | [`ComparisonEngineService`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/main/java/com/buywise/modules/comparison/service/ComparisonEngineService.java) | Computes strictly deterministic arithmetic. Never touches LLMs or multipart files. |
+| **O — Open/Closed** | [`ComparisonStrategy`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/main/java/com/buywise/modules/comparison/strategy/ComparisonStrategy.java) | New ranking strategies can be added by implementing the interface without modifying existing code. |
+| **L — Liskov Substitution** | [`LowestPriceStrategy`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/main/java/com/buywise/modules/comparison/strategy/LowestPriceStrategy.java), [`BestWarrantyStrategy`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/main/java/com/buywise/modules/comparison/strategy/BestWarrantyStrategy.java), etc. | All strategies fulfill the contract interchangeably without unexpected exceptions. |
+| **I — Interface Segregation** | [`LlmProvider`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/main/java/com/buywise/modules/ai/provider/LlmProvider.java) | Focused interface exposing only completion and structured output methods. |
+| **D — Dependency Inversion** | [`OfferAnalysisAiService`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/main/java/com/buywise/modules/ai/service/OfferAnalysisAiService.java) | Depends on the abstract `LlmProvider` interface, decoupling core logic from the Groq SDK. |
 
 ### 3. Design Patterns
-- **Strategy Pattern**: [`ComparisonStrategy`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/main/java/com/buywise/modules/comparison/strategy/ComparisonStrategy.java) with 4 interchangeable evaluation algorithms.
-- **Factory Pattern**: [`ComparisonStrategyFactory`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/main/java/com/buywise/modules/comparison/strategy/ComparisonStrategyFactory.java) dynamically resolves strategies via an internal `EnumMap`.
+- **Strategy Pattern**: [`ComparisonStrategy`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/main/java/com/buywise/modules/comparison/strategy/ComparisonStrategy.java) with 4 interchangeable evaluation algorithms.
+- **Factory Pattern**: [`ComparisonStrategyFactory`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/main/java/com/buywise/modules/comparison/strategy/ComparisonStrategyFactory.java) dynamically resolves strategies via an internal `EnumMap`.
 - **Builder Pattern**: Lombok `@Builder` on domain models and DTOs ensures immutable, readable object construction.
 - **Repository Pattern**: Spring Data JPA repositories with multi-tenant isolation (`findByIdAndUserId`).
 
@@ -329,29 +329,29 @@ Starts PostgreSQL 16, Spring Boot Backend, React Frontend, Prometheus, and Grafa
 cd backend
 mvn test
 ```
-- [`ComparisonEngineServiceTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/test/java/com/buywise/modules/comparison/service/ComparisonEngineServiceTest.java): Deterministic arithmetic invariant, `BigDecimal` scale handling, percentage difference calculations.
-- [`LowestPriceStrategyTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/test/java/com/buywise/modules/comparison/service/ComparisonEngineServiceTest.java): Delivery fees and discounts factored into rank 1.
-- [`BestWarrantyStrategyTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/test/java/com/buywise/modules/comparison/service/ComparisonEngineServiceTest.java): Warranty length prioritization.
-- [`BestValueScoreStrategyTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/test/java/com/buywise/modules/comparison/service/ComparisonEngineServiceTest.java): Spec-per-dirham score calculation.
-- [`StructuredOutputValidatorTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/test/java/com/buywise/modules/ai/service/StructuredOutputValidatorTest.java): JSON extraction, schema conformity, markdown code block stripping, and fallback handling.
-- [`ComparisonSecurityIntegrationTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/test/java/com/buywise/ComparisonSecurityIntegrationTest.java): Verifies multi-tenant user isolation.
-- [`AuthControllerIntegrationTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/backend/src/test/java/com/buywise/AuthControllerIntegrationTest.java): User registration, JWT issuance, password hashing verification.
+- [`ComparisonEngineServiceTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/test/java/com/buywise/modules/comparison/service/ComparisonEngineServiceTest.java): Deterministic arithmetic invariant, `BigDecimal` scale handling, percentage difference calculations.
+- [`LowestPriceStrategyTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/test/java/com/buywise/modules/comparison/service/ComparisonEngineServiceTest.java): Delivery fees and discounts factored into rank 1.
+- [`BestWarrantyStrategyTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/test/java/com/buywise/modules/comparison/service/ComparisonEngineServiceTest.java): Warranty length prioritization.
+- [`BestValueScoreStrategyTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/test/java/com/buywise/modules/comparison/service/ComparisonEngineServiceTest.java): Spec-per-dirham score calculation.
+- [`StructuredOutputValidatorTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/test/java/com/buywise/modules/ai/service/StructuredOutputValidatorTest.java): JSON extraction, schema conformity, markdown code block stripping, and fallback handling.
+- [`ComparisonSecurityIntegrationTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/test/java/com/buywise/ComparisonSecurityIntegrationTest.java): Verifies multi-tenant user isolation.
+- [`AuthControllerIntegrationTest`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/backend/src/test/java/com/buywise/AuthControllerIntegrationTest.java): User registration, JWT issuance, password hashing verification.
 
 ### Frontend Vitest Suite (7 / 7 Passed)
 ```bash
 cd frontend
 npm test
 ```
-- [`CurrencyContext.test.tsx`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/frontend/src/test/CurrencyContext.test.tsx): Dynamic multi-currency switching across MAD, EUR, and USD.
-- [`AuthContext.test.tsx`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/frontend/src/test/AuthContext.test.tsx): Authentication lifecycle and token storage.
-- [`LandingPage.test.tsx`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/frontend/src/test/LandingPage.test.tsx): Consumer landing page components and navigation.
-- [`LoginPage.test.tsx`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/frontend/src/test/LoginPage.test.tsx): Login submission and one-click demo login.
+- [`CurrencyContext.test.tsx`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/frontend/src/test/CurrencyContext.test.tsx): Dynamic multi-currency switching across MAD, EUR, and USD.
+- [`AuthContext.test.tsx`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/frontend/src/test/AuthContext.test.tsx): Authentication lifecycle and token storage.
+- [`LandingPage.test.tsx`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/frontend/src/test/LandingPage.test.tsx): Consumer landing page components and navigation.
+- [`LoginPage.test.tsx`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/frontend/src/test/LoginPage.test.tsx): Login submission and one-click demo login.
 
 ---
 
 ## 🔄 GitHub Actions CI/CD Pipeline
 
-The automated CI workflow is configured in [`.github/workflows/ci.yml`](file:///c:/Users/HP/Collections/VsCode%20Projects/spp/.github/workflows/ci.yml):
+The automated CI workflow is configured in [`.github/workflows/ci.yml`](file:///c:/Users/HP/Collections/VsCode%20Projects/buyWise/.github/workflows/ci.yml):
 1. **Backend Job**: Sets up JDK 21 Temurin, caches Maven dependencies, compiles 122 classes, and executes 18 unit/integration tests.
 2. **Frontend Job**: Sets up Node.js 20, runs `npm ci`, executes Vitest test suite, and builds production Vite bundle (`tsc && vite build`).
 3. **Docker Build Job**: Builds and verifies Docker container images for both backend and frontend.

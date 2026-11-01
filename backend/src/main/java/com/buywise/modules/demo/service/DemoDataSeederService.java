@@ -42,7 +42,8 @@ import java.util.List;
  * Service seeding realistic, internally consistent demo data and providing an idempotent reset mechanism.
  * 
  * Demonstrates:
- * - Deterministic Demo State: Seeds rich purchase, comparison, document, and deadline records without external APIs.
+ * - Rich Demo State: Seeds extensive purchase, comparison, document, and deadline records reflecting a real consumer portfolio.
+ * - Multi-Currency Support: Defaults to Moroccan Dirham (MAD) with realistic market pricing.
  * - Non-Destructive Reset: Only resets data for the demo user account (demo@buywise.com), protecting actual user data.
  */
 @Slf4j
@@ -77,7 +78,6 @@ public class DemoDataSeederService implements CommandLineRunner {
         log.info("Resetting demo user data to pristine baseline state...");
         User demoUser = userRepository.findByEmail("demo@buywise.com").orElse(null);
         if (demoUser != null) {
-            // Delete in strict child-to-parent order to respect relational integrity and prevent stale state
             reminderRepository.deleteAll(reminderRepository.findByUserIdAndStatusOrderByTriggerDateDesc(demoUser.getId(), ReminderStatus.TRIGGERED));
             reminderRepository.deleteAll(reminderRepository.findByUserIdAndStatusOrderByTriggerDateDesc(demoUser.getId(), ReminderStatus.PENDING));
             reminderRepository.flush();
@@ -126,6 +126,9 @@ public class DemoDataSeederService implements CommandLineRunner {
         // Ensure baseline demo records exist for demoUser
         if (comparisonRepository.countByUserId(demoUser.getId()) == 0) {
             seedLaptopComparison(demoUser);
+            seedSmartphoneComparison(demoUser);
+            seedOledTvComparison(demoUser);
+            seedVacuumComparison(demoUser);
         }
 
         if (purchaseRepository.countByUserId(demoUser.getId()) == 0) {
@@ -190,16 +193,179 @@ public class DemoDataSeederService implements CommandLineRunner {
         log.info("Seeded demo comparison for Lenovo IdeaPad Slim 5");
     }
 
+    private void seedSmartphoneComparison(User user) {
+        Comparison phoneComp = Comparison.builder()
+                .userId(user.getId())
+                .title("Apple iPhone 16 Pro 256GB — Reseller Comparison")
+                .categoryName("Smartphones & Mobile")
+                .status(ComparisonStatus.ANALYZED)
+                .notes("Comparing official Apple authorized resellers vs independent grey-market import. Key criteria: Moroccan carrier eSIM support, VAT invoice, and local Apple warranty.")
+                .aiAnalysisJson("{\"executiveSummary\":\"Comparing 3 offers for iPhone 16 Pro 256GB. Virgin Megastore and FNAC offer official Apple 1-year Moroccan warranty. Derb Ghallef offers a lower base price but sells a US-locked eSIM-only model without official local warranty.\",\"recommendedOfferId\":2,\"recommendedOfferSeller\":\"FNAC Maroc\",\"recommendationRationale\":\"FNAC Maroc includes an exclusive 24-month extended retailer warranty and 1,000 MAD trade-in voucher, making the effective cost lower than grey-market imports when warranty risk is factored.\",\"keySpecificationDifferences\":[\"Warranty: 12 months (Virgin) vs 24 months (FNAC) vs 3 months shop (Derb Ghallef)\",\"SIM Slot: Physical SIM + eSIM (Virgin & FNAC) vs Dual eSIM only (Derb Ghallef US variant)\"],\"missingInformationAlerts\":[\"Verify whether Derb Ghallef includes a valid VAT invoice for business expense deduction.\"],\"purchasingRisks\":[\"US models (A3081) do not have a physical SIM tray and cannot be serviced by Moroccan Apple Authorized Service Providers.\"],\"confidenceScore\":0.97}")
+                .aiAnalyzedAt(Instant.now().minusSeconds(7200))
+                .build();
+
+        Offer offerVirgin = Offer.builder()
+                .sellerName("Virgin Megastore Maroc")
+                .title("iPhone 16 Pro 256GB Natural Titanium")
+                .productModel("A3293")
+                .currency("MAD")
+                .basePrice(new BigDecimal("14990.00"))
+                .deliveryFee(BigDecimal.ZERO)
+                .additionalFees(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO)
+                .warrantyMonths(12)
+                .returnWindowDays(14)
+                .specificationsJson("{\"chip\":\"A18 Pro with 6-core GPU\",\"storage\":\"256 GB NVMe\",\"camera\":\"48MP Fusion + 48MP Ultra Wide + 12MP 5x Telephoto\",\"display\":\"6.3\\\" Super Retina XDR OLED ProMotion 120Hz\",\"connectivity\":\"5G, Wi-Fi 7, USB-C 3.0 (10Gbps)\"}")
+                .warrantyConditions("Official Apple 1-year international warranty valid at all Moroccan AASPs.")
+                .returnPolicy("14-day standard return window for sealed items.")
+                .isRecommended(false)
+                .valueScore(new BigDecimal("88.40"))
+                .build();
+        offerVirgin.recalculateTotalPrice();
+        phoneComp.addOffer(offerVirgin);
+
+        Offer offerFnac = Offer.builder()
+                .sellerName("FNAC Maroc")
+                .title("iPhone 16 Pro 256GB Natural Titanium + FNAC Care")
+                .productModel("A3293")
+                .currency("MAD")
+                .basePrice(new BigDecimal("15290.00"))
+                .deliveryFee(BigDecimal.ZERO)
+                .additionalFees(BigDecimal.ZERO)
+                .discountAmount(new BigDecimal("800.00"))
+                .warrantyMonths(24)
+                .returnWindowDays(15)
+                .specificationsJson("{\"chip\":\"A18 Pro with 6-core GPU\",\"storage\":\"256 GB NVMe\",\"camera\":\"48MP Fusion + 48MP Ultra Wide + 12MP 5x Telephoto\",\"display\":\"6.3\\\" Super Retina XDR OLED ProMotion 120Hz\",\"connectivity\":\"5G, Wi-Fi 7, USB-C 3.0 (10Gbps)\"}")
+                .warrantyConditions("24-month warranty: 1st year Apple official + 2nd year FNAC Care replacement guarantee.")
+                .returnPolicy("15-day satisfaction guarantee with immediate voucher refund.")
+                .isRecommended(true)
+                .valueScore(new BigDecimal("95.60"))
+                .build();
+        offerFnac.recalculateTotalPrice();
+        phoneComp.addOffer(offerFnac);
+
+        Offer offerGrey = Offer.builder()
+                .sellerName("Derb Ghallef Tech Store")
+                .title("iPhone 16 Pro 256GB (US Model - No SIM Tray)")
+                .productModel("A3081")
+                .currency("MAD")
+                .basePrice(new BigDecimal("13800.00"))
+                .deliveryFee(BigDecimal.ZERO)
+                .additionalFees(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO)
+                .warrantyMonths(3)
+                .returnWindowDays(0)
+                .specificationsJson("{\"chip\":\"A18 Pro\",\"storage\":\"256 GB\",\"display\":\"6.3\\\" OLED ProMotion\",\"sim\":\"Dual eSIM only (No physical nano-SIM slot)\"}")
+                .warrantyConditions("3-month shop warranty. No official Apple coverage in Morocco for US models.")
+                .returnPolicy("No returns or exchanges once box seal is broken.")
+                .isRecommended(false)
+                .valueScore(new BigDecimal("68.10"))
+                .build();
+        offerGrey.recalculateTotalPrice();
+        phoneComp.addOffer(offerGrey);
+
+        comparisonRepository.save(phoneComp);
+        log.info("Seeded demo comparison for iPhone 16 Pro");
+    }
+
+    private void seedOledTvComparison(User user) {
+        Comparison tvComp = Comparison.builder()
+                .userId(user.getId())
+                .title("Sony BRAVIA XR 65'' OLED (A80L) vs Competitors")
+                .categoryName("Televisions & Home Theater")
+                .status(ComparisonStatus.ANALYZED)
+                .notes("Evaluating high-end 65-inch OLED for living room cinema and PlayStation 5 gaming. Comparing installation fees and burn-in warranty policies.")
+                .aiAnalysisJson("{\"executiveSummary\":\"Comparing Electroplanet and Cosmos Electro for Sony BRAVIA XR-65A80L OLED. Electroplanet includes certified wall-mounting and full 24-month nationwide warranty.\",\"recommendedOfferId\":1,\"recommendedOfferSeller\":\"Electroplanet\",\"recommendationRationale\":\"Electroplanet includes free wall mounting (worth 350 MAD) and an extra 12 months manufacturer warranty, compensating for the small price gap.\",\"keySpecificationDifferences\":[\"Warranty: 24 months official vs 12 months seller\",\"Installation: Free professional wall mounting included at Electroplanet\"],\"missingInformationAlerts\":[\"Confirm HDMI 2.1 cable is included in box.\"],\"purchasingRisks\":[\"Cosmos does not explicitly cover accidental OLED panel burn-in under importer warranty.\"],\"confidenceScore\":0.94}")
+                .aiAnalyzedAt(Instant.now().minusSeconds(14400))
+                .build();
+
+        Offer offerEp = Offer.builder()
+                .sellerName("Electroplanet")
+                .title("Sony BRAVIA XR 65\" A80L 4K HDR OLED Google TV")
+                .productModel("XR-65A80L")
+                .currency("MAD")
+                .basePrice(new BigDecimal("21990.00"))
+                .deliveryFee(BigDecimal.ZERO)
+                .additionalFees(BigDecimal.ZERO)
+                .discountAmount(new BigDecimal("1000.00"))
+                .warrantyMonths(24)
+                .returnWindowDays(10)
+                .specificationsJson("{\"panel\":\"4K OLED (3840x2160)\",\"refreshRate\":\"120Hz Native\",\"processor\":\"Cognitive Processor XR\",\"audio\":\"Acoustic Surface Audio+ (3.2 ch, 50W)\",\"gaming\":\"HDMI 2.1 4K120, VRR, ALLM, Auto HDR Tone Mapping\"}")
+                .warrantyConditions("24-month Sony Morocco official warranty covering panel and power supply.")
+                .returnPolicy("10-day exchange window with free collection.")
+                .isRecommended(true)
+                .valueScore(new BigDecimal("93.80"))
+                .build();
+        offerEp.recalculateTotalPrice();
+        tvComp.addOffer(offerEp);
+
+        Offer offerCosmos = Offer.builder()
+                .sellerName("Cosmos Electro")
+                .title("Sony 65\" 4K OLED XR-65A80L")
+                .productModel("XR-65A80L")
+                .currency("MAD")
+                .basePrice(new BigDecimal("20490.00"))
+                .deliveryFee(new BigDecimal("150.00"))
+                .additionalFees(new BigDecimal("350.00")) // Wall mount installation fee
+                .discountAmount(BigDecimal.ZERO)
+                .warrantyMonths(12)
+                .returnWindowDays(7)
+                .specificationsJson("{\"panel\":\"4K OLED (3840x2160)\",\"refreshRate\":\"120Hz\",\"processor\":\"Cognitive Processor XR\"}")
+                .warrantyConditions("12-month standard importer warranty.")
+                .returnPolicy("7-day return period strictly in unopened packaging.")
+                .isRecommended(false)
+                .valueScore(new BigDecimal("84.20"))
+                .build();
+        offerCosmos.recalculateTotalPrice();
+        tvComp.addOffer(offerCosmos);
+
+        comparisonRepository.save(tvComp);
+        log.info("Seeded demo comparison for Sony OLED TV");
+    }
+
+    private void seedVacuumComparison(User user) {
+        Comparison vacuumComp = Comparison.builder()
+                .userId(user.getId())
+                .title("Dyson V15 Detect Absolute — Cordless Vacuum")
+                .categoryName("Small Appliances & Cleaning")
+                .status(ComparisonStatus.DRAFT)
+                .notes("Researching laser illumination head and suction power. Evaluating Dyson direct vs Jumia official store.")
+                .build();
+
+        Offer offerDyson = Offer.builder()
+                .sellerName("Dyson Online Maroc")
+                .title("Dyson V15 Detect Absolute (Gold/Iron)")
+                .productModel("368340-01")
+                .currency("MAD")
+                .basePrice(new BigDecimal("7499.00"))
+                .deliveryFee(BigDecimal.ZERO)
+                .additionalFees(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO)
+                .warrantyMonths(24)
+                .returnWindowDays(30)
+                .specificationsJson("{\"suction\":\"240 AW\",\"runTime\":\"Up to 60 minutes\",\"filtration\":\"Whole-machine HEPA 99.99% to 0.1 microns\",\"weight\":\"3.0 kg\",\"heads\":\"Digital Motorbar + Fluffy Optic\"}")
+                .warrantyConditions("24-month official Dyson guarantee with free home pick-up repair service.")
+                .returnPolicy("30-day risk-free money-back trial.")
+                .isRecommended(true)
+                .valueScore(new BigDecimal("91.50"))
+                .build();
+        offerDyson.recalculateTotalPrice();
+        vacuumComp.addOffer(offerDyson);
+
+        comparisonRepository.save(vacuumComp);
+        log.info("Seeded demo comparison for Dyson V15");
+    }
+
     private void seedPurchasesAndDeadlines(User user) {
         LocalDate today = LocalDate.now();
 
-        // Purchase 1: Samsung Washing Machine (Bought 6 months ago, active warranty)
+        // 1. Samsung Washing Machine
         Purchase washingMachine = Purchase.builder()
                 .userId(user.getId())
                 .productName("Samsung EcoBubble 8kg Front Load Washing Machine")
                 .modelNumber("WW80TA046AX")
                 .category("Major Appliances")
-                .sellerName("Cosmos Electro")
+                .sellerName("Cosmos Electro Casablanca")
                 .purchaseDate(today.minusMonths(6))
                 .pricePaid(new BigDecimal("4299.00"))
                 .currency("MAD")
@@ -212,13 +378,13 @@ public class DemoDataSeederService implements CommandLineRunner {
                 .build();
         washingMachine = purchaseRepository.save(washingMachine);
 
-        // Purchase 2: LG InstaView Refrigerator (Bought 10 days ago, RETURN DEADLINE IN 4 DAYS!)
+        // 2. LG InstaView Refrigerator (Return deadline in 4 days!)
         Purchase refrigerator = Purchase.builder()
                 .userId(user.getId())
                 .productName("LG InstaView Door-in-Door Refrigerator 601L")
                 .modelNumber("GSX961MCVZ")
                 .category("Major Appliances")
-                .sellerName("Marjane Mall")
+                .sellerName("Marjane Mall Casablanca")
                 .purchaseDate(today.minusDays(10))
                 .pricePaid(new BigDecimal("11490.00"))
                 .currency("MAD")
@@ -231,7 +397,83 @@ public class DemoDataSeederService implements CommandLineRunner {
                 .build();
         refrigerator = purchaseRepository.save(refrigerator);
 
-        // Seed Deadlines
+        // 3. Apple MacBook Pro 14" M3 Pro (Warranty expiring in 30 days)
+        Purchase macbook = Purchase.builder()
+                .userId(user.getId())
+                .productName("Apple MacBook Pro 14\" M3 Pro (18GB RAM / 512GB SSD)")
+                .modelNumber("MRX33FN/A")
+                .category("Laptops & Computers")
+                .sellerName("Uno.ma (Apple Authorised Reseller)")
+                .purchaseDate(today.minusMonths(11))
+                .pricePaid(new BigDecimal("23990.00"))
+                .currency("MAD")
+                .warrantyMonths(12)
+                .warrantyExpirationDate(today.plusDays(30)) // Expiring in 30 days!
+                .returnDeadline(today.minusMonths(11).plusDays(14))
+                .serialNumber("C02G4088MD6R")
+                .status(PurchaseStatus.ACTIVE)
+                .notes("Space Black. Primary development machine. Check AppleCare+ renewal option before expiration.")
+                .build();
+        macbook = purchaseRepository.save(macbook);
+
+        // 4. Sony WH-1000XM5 Wireless Headphones
+        Purchase headphones = Purchase.builder()
+                .userId(user.getId())
+                .productName("Sony WH-1000XM5 Noise-Cancelling Headphones")
+                .modelNumber("WH1000XM5/B")
+                .category("Audio & Accessories")
+                .sellerName("Electroplanet Casablanca Anfa")
+                .purchaseDate(today.minusMonths(8))
+                .pricePaid(new BigDecimal("3499.00"))
+                .currency("MAD")
+                .warrantyMonths(24)
+                .warrantyExpirationDate(today.minusMonths(8).plusMonths(24))
+                .returnDeadline(today.minusMonths(8).plusDays(14))
+                .serialNumber("SN-SONY-XM5-99412")
+                .status(PurchaseStatus.ACTIVE)
+                .notes("Black finish. Used daily for remote meetings and travel.")
+                .build();
+        headphones = purchaseRepository.save(headphones);
+
+        // 5. De'Longhi Magnifica S Espresso Machine
+        Purchase coffeeMachine = Purchase.builder()
+                .userId(user.getId())
+                .productName("De'Longhi Magnifica S Bean-to-Cup Espresso Machine")
+                .modelNumber("ECAM22.110.B")
+                .category("Kitchen Appliances")
+                .sellerName("Cosmos Electro Rabat")
+                .purchaseDate(today.minusMonths(3))
+                .pricePaid(new BigDecimal("3890.00"))
+                .currency("MAD")
+                .warrantyMonths(24)
+                .warrantyExpirationDate(today.minusMonths(3).plusMonths(24))
+                .returnDeadline(today.minusMonths(3).plusDays(14))
+                .serialNumber("DL-MAGS-772910")
+                .status(PurchaseStatus.ACTIVE)
+                .notes("Includes 1kg Lavazza espresso beans starter pack. Descaling filter cycle due quarterly.")
+                .build();
+        coffeeMachine = purchaseRepository.save(coffeeMachine);
+
+        // 6. PlayStation 5 Digital Edition (Expired warranty demonstration)
+        Purchase ps5 = Purchase.builder()
+                .userId(user.getId())
+                .productName("Sony PlayStation 5 Digital Edition (Slim)")
+                .modelNumber("CFI-2000B01")
+                .category("Gaming & Entertainment")
+                .sellerName("Virgin Megastore Marrakech")
+                .purchaseDate(today.minusMonths(18))
+                .pricePaid(new BigDecimal("4799.00"))
+                .currency("MAD")
+                .warrantyMonths(12)
+                .warrantyExpirationDate(today.minusMonths(6)) // Expired 6 months ago!
+                .returnDeadline(today.minusMonths(18).plusDays(14))
+                .serialNumber("PS5-SLIM-098234-MA")
+                .status(PurchaseStatus.ACTIVE)
+                .notes("Maintained in living room console. Out of warranty; clean dust intake vents every 6 months.")
+                .build();
+        ps5 = purchaseRepository.save(ps5);
+
+        // --- Seed Deadlines ---
         Deadline returnDeadline = Deadline.builder()
                 .userId(user.getId())
                 .purchaseId(refrigerator.getId())
@@ -243,6 +485,30 @@ public class DemoDataSeederService implements CommandLineRunner {
                 .notes("Last chance to request store pickup and 100% refund from Marjane Mall.")
                 .build();
         deadlineRepository.save(returnDeadline);
+
+        Deadline appleCareDeadline = Deadline.builder()
+                .userId(user.getId())
+                .purchaseId(macbook.getId())
+                .title("AppleCare+ Warranty Expiration: MacBook Pro 14\"")
+                .deadlineType(DeadlineType.WARRANTY_EXPIRY)
+                .dueDate(today.plusDays(30))
+                .urgency("HIGH")
+                .isCompleted(false)
+                .notes("Standard 1-year warranty expiring. Decide whether to extend AppleCare annual coverage.")
+                .build();
+        deadlineRepository.save(appleCareDeadline);
+
+        Deadline descalingDeadline = Deadline.builder()
+                .userId(user.getId())
+                .purchaseId(coffeeMachine.getId())
+                .title("Quarterly Descaling Cycle: De'Longhi Magnifica S")
+                .deadlineType(DeadlineType.CUSTOM)
+                .dueDate(today.plusDays(12))
+                .urgency("MEDIUM")
+                .isCompleted(false)
+                .notes("Use EcoDecalk solution to prevent limescale buildup and maintain pressure warranty.")
+                .build();
+        deadlineRepository.save(descalingDeadline);
 
         Deadline maintenanceDeadline = Deadline.builder()
                 .userId(user.getId())
@@ -256,8 +522,20 @@ public class DemoDataSeederService implements CommandLineRunner {
                 .build();
         deadlineRepository.save(maintenanceDeadline);
 
-        // Seed Active Reminder
-        Reminder activeReminder = Reminder.builder()
+        Deadline ps5Checkup = Deadline.builder()
+                .userId(user.getId())
+                .purchaseId(ps5.getId())
+                .title("Ventilation Dust Cleaning: PlayStation 5")
+                .deadlineType(DeadlineType.CUSTOM)
+                .dueDate(today.minusDays(5))
+                .urgency("LOW")
+                .isCompleted(true) // Marked completed to showcase completed history!
+                .notes("Vents vacuumed and internal fan cleared of dust.")
+                .build();
+        deadlineRepository.save(ps5Checkup);
+
+        // --- Seed Active Reminders ---
+        Reminder activeReminder1 = Reminder.builder()
                 .deadlineId(returnDeadline.getId())
                 .userId(user.getId())
                 .triggerDate(today)
@@ -265,10 +543,20 @@ public class DemoDataSeederService implements CommandLineRunner {
                 .status(ReminderStatus.TRIGGERED)
                 .triggeredAt(Instant.now().minusSeconds(1800))
                 .build();
-        reminderRepository.save(activeReminder);
+        reminderRepository.save(activeReminder1);
 
-        // Seed Sample Document & Verified Facts
-        Document receiptDoc = Document.builder()
+        Reminder activeReminder2 = Reminder.builder()
+                .deadlineId(appleCareDeadline.getId())
+                .userId(user.getId())
+                .triggerDate(today)
+                .message("WARRANTY NOTICE: 30 days remaining on your Apple MacBook Pro 14\" official warranty. Run Apple Hardware Diagnostics to check battery health.")
+                .status(ReminderStatus.TRIGGERED)
+                .triggeredAt(Instant.now().minusSeconds(3600))
+                .build();
+        reminderRepository.save(activeReminder2);
+
+        // --- Seed Documents & Verified Facts ---
+        Document receiptDoc1 = Document.builder()
                 .userId(user.getId())
                 .purchaseId(refrigerator.getId())
                 .fileName("Facture_MarjaneMall_LG_InstaView.txt")
@@ -296,11 +584,10 @@ public class DemoDataSeederService implements CommandLineRunner {
                         """)
                 .extractionStatus("COMPLETED")
                 .build();
-        receiptDoc = documentRepository.save(receiptDoc);
+        receiptDoc1 = documentRepository.save(receiptDoc1);
 
-        // Add extracted facts with verification statuses
-        ExtractedFact fact1 = ExtractedFact.builder()
-                .document(receiptDoc)
+        factRepository.save(ExtractedFact.builder()
+                .document(receiptDoc1)
                 .factKey("PRODUCT_NAME")
                 .extractedValue("LG InstaView Door-in-Door 601L (GSX961MCVZ)")
                 .verifiedValue("LG InstaView Door-in-Door 601L (GSX961MCVZ)")
@@ -308,11 +595,10 @@ public class DemoDataSeederService implements CommandLineRunner {
                 .pageNumber(1)
                 .confidenceScore(new BigDecimal("0.98"))
                 .verificationStatus(VerificationStatus.VERIFIED)
-                .build();
-        factRepository.save(fact1);
+                .build());
 
-        ExtractedFact fact2 = ExtractedFact.builder()
-                .document(receiptDoc)
+        factRepository.save(ExtractedFact.builder()
+                .document(receiptDoc1)
                 .factKey("PURCHASE_PRICE")
                 .extractedValue("11 490,00 MAD")
                 .verifiedValue("11490.00")
@@ -320,11 +606,10 @@ public class DemoDataSeederService implements CommandLineRunner {
                 .pageNumber(1)
                 .confidenceScore(new BigDecimal("0.99"))
                 .verificationStatus(VerificationStatus.VERIFIED)
-                .build();
-        factRepository.save(fact2);
+                .build());
 
-        ExtractedFact fact3 = ExtractedFact.builder()
-                .document(receiptDoc)
+        factRepository.save(ExtractedFact.builder()
+                .document(receiptDoc1)
                 .factKey("WARRANTY_DURATION_MONTHS")
                 .extractedValue("36 mois")
                 .verifiedValue("36")
@@ -332,20 +617,77 @@ public class DemoDataSeederService implements CommandLineRunner {
                 .pageNumber(1)
                 .confidenceScore(new BigDecimal("0.95"))
                 .verificationStatus(VerificationStatus.VERIFIED)
-                .build();
-        factRepository.save(fact3);
+                .build());
 
-        ExtractedFact fact4 = ExtractedFact.builder()
-                .document(receiptDoc)
+        factRepository.save(ExtractedFact.builder()
+                .document(receiptDoc1)
                 .factKey("WARRANTY_EXCLUSIONS")
                 .extractedValue("Dégradations causées par surtension électrique sans parasurtenseur certifié")
                 .sourceExcerpt("Exclusions: Dégradations causées par surtension électrique sans parasurtenseur certifié.")
                 .pageNumber(1)
                 .confidenceScore(new BigDecimal("0.91"))
                 .verificationStatus(VerificationStatus.PENDING_VERIFICATION)
-                .build();
-        factRepository.save(fact4);
+                .build());
 
-        log.info("Seeded demo purchases, deadlines, and verified document facts.");
+        // Document 2: MacBook Pro Invoice
+        Document receiptDoc2 = Document.builder()
+                .userId(user.getId())
+                .purchaseId(macbook.getId())
+                .fileName("Facture_Uno_MacBook_Pro_M3.txt")
+                .storedFilePath("./uploads/Facture_Uno_MacBook_Pro_M3.txt")
+                .contentType("text/plain")
+                .fileSizeBytes(1680L)
+                .documentType(DocumentType.INVOICE)
+                .rawTextContent("""
+                        UNO.MA - APPLE AUTHORISED RESELLER
+                        BOULEVARD D'ANFA, CASABLANCA
+                        FACTURE N°: UNO-2023-10492
+                        Client: Karim Bennani
+                        
+                        1x MacBook Pro 14" M3 Pro 18GB/512GB Space Black (MRX33FN/A)
+                        Numéro de Série: C02G4088MD6R
+                        Prix TTC: 23 990,00 MAD
+                        
+                        Garantie légale Apple: 12 mois à compter de la date de facture.
+                        Service Après-Vente agréé: Uno Service Center Casablanca.
+                        """)
+                .extractionStatus("COMPLETED")
+                .build();
+        receiptDoc2 = documentRepository.save(receiptDoc2);
+
+        factRepository.save(ExtractedFact.builder()
+                .document(receiptDoc2)
+                .factKey("PRODUCT_NAME")
+                .extractedValue("MacBook Pro 14\" M3 Pro 18GB/512GB")
+                .verifiedValue("MacBook Pro 14\" M3 Pro 18GB/512GB")
+                .sourceExcerpt("1x MacBook Pro 14\" M3 Pro 18GB/512GB Space Black (MRX33FN/A)")
+                .pageNumber(1)
+                .confidenceScore(new BigDecimal("0.99"))
+                .verificationStatus(VerificationStatus.VERIFIED)
+                .build());
+
+        factRepository.save(ExtractedFact.builder()
+                .document(receiptDoc2)
+                .factKey("SERIAL_NUMBER")
+                .extractedValue("C02G4088MD6R")
+                .verifiedValue("C02G4088MD6R")
+                .sourceExcerpt("Numéro de Série: C02G4088MD6R")
+                .pageNumber(1)
+                .confidenceScore(new BigDecimal("1.00"))
+                .verificationStatus(VerificationStatus.VERIFIED)
+                .build());
+
+        factRepository.save(ExtractedFact.builder()
+                .document(receiptDoc2)
+                .factKey("PURCHASE_PRICE")
+                .extractedValue("23 990,00 MAD")
+                .verifiedValue("23990.00")
+                .sourceExcerpt("Prix TTC: 23 990,00 MAD")
+                .pageNumber(1)
+                .confidenceScore(new BigDecimal("0.99"))
+                .verificationStatus(VerificationStatus.VERIFIED)
+                .build());
+
+        log.info("Seeded comprehensive demo comparisons, 6 purchases, 5 deadlines, and verified document facts.");
     }
 }
