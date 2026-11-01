@@ -11,11 +11,32 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * Adapter bridging the domain {@link User} entity to Spring Security's {@link UserDetails}.
- * 
- * Demonstrates:
- * - Adapter Pattern: Translates custom application domain entity into the framework contract expected by Spring Security.
- * - Single Responsibility Principle (SRP): Keeps Spring Security-specific logic out of the domain model.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: ADAPTER PATTERN (GoF) & SINGLE RESPONSIBILITY PRINCIPLE (SRP)
+ * =================================================================================================
+ * Design Patterns & Principles:
+ * 1. Adapter Pattern (Structural GoF):
+ *    - Target Interface: {@link UserDetails} (Spring Security's required authentication contract).
+ *    - Adaptee: {@link User} (Our clean JPA database domain entity).
+ *    - Adapter: {@link UserPrincipal} (Implements target UserDetails while wrapping/adapting domain User).
+ *
+ * 2. Single Responsibility Principle (SRP) & Architectural Purity:
+ *    - Domain entities (such as {@link User}) should model business state and database persistence,
+ *      free of third-party framework details (authorities, account expiration flags, credentials status).
+ *    - By introducing {@link UserPrincipal} as an Adapter, Spring Security logic is cleanly isolated
+ *      from the core business model. If we migrate from Spring Security to another framework or protocol,
+ *      the User entity remains 100% untouched.
+ *
+ * 3. Static Factory Method Pattern:
+ *    - {@link #create(User)} encapsulates mapping domain user state (roles, email, ID) into authorities
+ *      and principal properties in a clean, immutable manner.
+ *
+ * Technical Interview Q&A Crib Sheet:
+ * Q: "Why not simply make the User JPA entity implement UserDetails directly?"
+ * A: Making JPA entities implement framework interfaces creates tight architectural coupling,
+ *    violates SRP, and can cause subtle serialization/JSON bugs or lazy-loading session leaks
+ *    when Spring Security serializes UserDetails into the SecurityContext or HTTP sessions.
+ * =================================================================================================
  */
 @Getter
 @AllArgsConstructor

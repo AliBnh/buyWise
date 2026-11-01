@@ -1,4 +1,36 @@
+# ==============================================================================================
+# BUYWISE — MULTI-SERVICE PRODUCTION-MINDED DOCKER COMPOSE CONFIGURATION
+# ==============================================================================================
+# ARCHITECTURAL DESIGN & INTERVIEW JUSTIFICATIONS:
+#
+# 1. SERVICE DEPENDENCY & STARTUP SYNCHRONIZATION (The "Why not simple depends_on?" Question):
+#    - Problem: A standard `depends_on: [postgres]` only waits until the Postgres container starts,
+#      NOT until the database engine is actually initialized, accepting connections, and ready for queries.
+#    - Solution: We implement an active healthcheck on Postgres using `pg_isready`. The Spring Boot
+#      backend specifies `condition: service_healthy`. This guarantees Flyway database migrations
+#      and Hibernate schema validation never encounter connection-refused errors during startup.
+#
+# 2. NETWORK ISOLATION (Defense in Depth):
+#    - All services communicate over an isolated bridge network (`buywise-net`).
+#    - Backend accesses PostgreSQL via internal DNS hostname `postgres:5432` without routing through
+#      the host machine's public interface.
+#    - Prometheus scrapes `backend:8080` internally, keeping the raw actuator telemetry off public routes.
+#
+# 3. SECRET HYGIENE & PRINCIPLE OF LEAST PRIVILEGE:
+#    - Environment variables use Bash-style default fallbacks: `${VAR:-default_value}`.
+#    - Sensitive production secrets (JWT keys, Groq LLM API keys) are supplied via an uncommitted
+#      `.env` file (ignored by .gitignore), preventing credentials from ever leaking to GitHub.
+#
+# 4. PERSISTENCE LIFECYCLE (ACID & Durability):
+#    - Named volumes (`buywise_postgres_data`, `buywise_uploads`, `buywise_prometheus_data`,
+#      `buywise_grafana_data`) preserve database records, user receipts, and metrics across container
+#      rebuilds (`docker compose down && docker compose up -d`).
+# ==============================================================================================
+
 services:
+  # --------------------------------------------------------------------------------------------
+  # 1. RELATIONAL DATABASE SERVICE — PostgreSQL 16 Alpine
+  # --------------------------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
     container_name: buywise-postgres
@@ -8,10 +40,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-buywise}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-buywise_pass}
     ports:
+      # Exposed to host for external management / DB tools (DBeaver, pgAdmin)
       - "5432:5432"
     volumes:
+      # Persists transaction logs (WAL) and table data for ACID Durability
       - buywise_postgres_data:/var/lib/postgresql/data
     healthcheck:
+      # pg_isready verifies socket connection and DB readiness before dependents start
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-buywise} -d ${POSTGRES_DB:-buywise}"]
       interval: 10s
       timeout: 5s
@@ -20,6 +55,9 @@ services:
     networks:
       - buywise-net
 
+  # --------------------------------------------------------------------------------------------
+  # 2. APPLICATION BACKEND — Spring Boot 3.3.5 / Java 21 (Temurin)
+  # --------------------------------------------------------------------------------------------
   backend:
     build:
       context: ./backend
@@ -27,9 +65,11 @@ services:
     container_name: buywise-backend
     restart: unless-stopped
     depends_on:
+      # Strict dependency synchronization: Backend waits until Postgres passes healthcheck
       postgres:
         condition: service_healthy
     ports:
+      # Host port 8081 mapped to container port 8080 to prevent conflicts with local services
       - "${BACKEND_PORT:-8081}:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -42,8 +82,10 @@ services:
       GROQ_FALLBACK_MODEL: ${GROQ_FALLBACK_MODEL:-openai/gpt-oss-120b}
       UPLOAD_DIR: /app/uploads
     volumes:
+      # Persists user uploaded receipts, invoices, and warranty documents
       - buywise_uploads:/app/uploads
     healthcheck:
+      # Probes the application health endpoint; verifies Spring DispatcherServlet is handling traffic
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/v1/health"]
       interval: 15s
       timeout: 5s
@@ -52,6 +94,9 @@ services:
     networks:
       - buywise-net
 
+  # --------------------------------------------------------------------------------------------
+  # 3. SINGLE PAGE APPLICATION (SPA) FRONTEND — React 18 / Vite / Nginx Alpine
+  # --------------------------------------------------------------------------------------------
   frontend:
     build:
       context: ./frontend
@@ -61,6 +106,7 @@ services:
     depends_on:
       - backend
     ports:
+      # Host port 3001 mapped to Nginx container port 80
       - "${FRONTEND_PORT:-3001}:80"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:80/"]
@@ -70,11 +116,15 @@ services:
     networks:
       - buywise-net
 
+  # --------------------------------------------------------------------------------------------
+  # 4. TIME-SERIES METRICS SCRAPER — Prometheus v2.51.0
+  # --------------------------------------------------------------------------------------------
   prometheus:
     image: prom/prometheus:v2.51.0
     container_name: buywise-prometheus
     restart: unless-stopped
     volumes:
+      # Mounts the custom Prometheus scrape job configuration (scrapes backend:8080/actuator/prometheus)
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - buywise_prometheus_data:/prometheus
     ports:
@@ -82,6 +132,9 @@ services:
     networks:
       - buywise-net
 
+  # --------------------------------------------------------------------------------------------
+  # 5. METRICS VISUALIZATION DASHBOARD — Grafana v10.4.1
+  # --------------------------------------------------------------------------------------------
   grafana:
     image: grafana/grafana:10.4.1
     container_name: buywise-grafana
@@ -93,6 +146,7 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     volumes:
+      # Auto-provisions Prometheus datasource and the 12-panel BuyWise Overview Dashboard on startup
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/dashboards:/var/lib/grafana/dashboards
@@ -104,6 +158,9 @@ services:
     networks:
       - buywise-net
 
+# ==============================================================================================
+# PERSISTENT VOLUMES (Durability across Container Restarts)
+# ==============================================================================================
 volumes:
   buywise_postgres_data:
     driver: local
@@ -114,6 +171,9 @@ volumes:
   buywise_grafana_data:
     driver: local
 
+# ==============================================================================================
+# BRIDGED PRIVATE NETWORK (Internal DNS Resolution)
+# ==============================================================================================
 networks:
   buywise-net:
     driver: bridge

@@ -10,9 +10,28 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Concrete Strategy prioritizing absolute lowest delivered total purchase price.
- * 
- * Strategy Pattern: Implements {@link ComparisonStrategy} focusing strictly on deterministic cost ranking.
+ * ==============================================================================================
+ * ARCHITECTURAL DESIGN NOTE: STRATEGY PATTERN & DETERMINISTIC FINANCIAL PRECISION
+ * ==============================================================================================
+ * Design Patterns & Clean Code Principles:
+ * 1. Strategy Pattern (GoF):
+ *    - Concrete Strategy: Implements {@link ComparisonStrategy} focusing strictly on deterministic cost ranking.
+ *    - Encapsulates the pricing algorithm, allowing dynamic runtime selection via {@link ComparisonStrategyFactory}.
+ *
+ * 2. Financial Precision (The "Why BigDecimal?" Question):
+ *    - Never use float or double for monetary calculations! Floating-point IEEE 754 representations
+ *      introduce precision drift (e.g., 0.1 + 0.2 = 0.30000000000000004).
+ *    - We enforce {@link BigDecimal} with explicit {@link RoundingMode#HALF_UP} and fixed scale,
+ *      preventing ArithmeticException: Non-terminating decimal expansion during divisions.
+ *
+ * 3. Total Cost Invariant:
+ *    - Evaluates total price: `totalPrice = basePrice + deliveryFee + additionalFees - discountAmount`.
+ *
+ * 4. Normalization Formula:
+ *    - The cheapest offer receives 100.00 points.
+ *    - More expensive offers are penalized proportionally relative to the price range across offers:
+ *      `Score = 100 - ((offerPrice - minPrice) / (maxPrice - minPrice) * 50)`.
+ * ==============================================================================================
  */
 @Component
 public class LowestPriceStrategy implements ComparisonStrategy {

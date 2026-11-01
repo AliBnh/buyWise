@@ -23,12 +23,43 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Service managing purchase comparisons and seller offers with strict user data isolation.
- * 
- * Demonstrates:
- * - Domain-Driven Design (DDD): Comparison acts as the Aggregate Root coordinating associated Offers.
- * - Resource Ownership Verification: Enforces that users cannot inspect, modify, or delete another user's comparison data.
- * - Transaction Management: Ensures atomic updates to comparison aggregates.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: TRANSACTION MANAGEMENT (ACID) & SPRING IOC CONSTRUCTOR INJECTION
+ * =================================================================================================
+ * Core Architectural Invariants:
+ * 1. ACID Transaction Guarantees (@Transactional):
+ *    - Atomicity: Comparison aggregates and their associated offers are persisted or rolled back
+ *      together as a single atomic unit of work. If an offer fails validation, no dirty records persist.
+ *    - Consistency: Enforces relational BCNF constraints and entity-level invariants before commit.
+ *    - Isolation: Default Read Committed isolation in PostgreSQL prevents dirty reads. Read-only queries
+ *      use `@Transactional(readOnly = true)` which optimizes connection pooling, disables Hibernate
+ *      dirty-checking snapshot overhead, and prevents accidental flush operations.
+ *    - Durability: Changes committed through the EntityManager are flushed to PostgreSQL's
+ *      Write-Ahead Log (WAL), surviving unexpected server restarts.
+ *
+ * 2. Dependency Injection & Spring IoC Best Practices:
+ *    - Uses Constructor Injection via Lombok's `@RequiredArgsConstructor` on `private final` fields.
+ *    - Why Constructor Injection over @Autowired on fields?
+ *      a) Immutability: Dependencies are marked `final` and cannot be modified post-construction.
+ *      b) Fail-Fast: Guarantees that the service cannot be instantiated in a half-initialized state.
+ *      c) Pure Unit Testability: Classes can be tested with Mockito in plain Java without spinning up
+ *         the expensive Spring ApplicationContext or relying on reflection (`ReflectionTestUtils`).
+ *      d) Circular Dependency Detection: Circular bean dependencies are exposed immediately at startup.
+ *
+ * 3. Multi-Tenant Security & IDOR Elimination (OWASP API Top 10):
+ *    - Insecure Direct Object Reference (IDOR) is eliminated by binding every query to the caller:
+ *      {@code comparisonRepository.findByIdAndUserId(id, currentUserId)}.
+ *    - Even if a malicious tenant guesses an integer ID belonging to another user, the database
+ *      returns Optional.empty(), which translates to HTTP 404 (or 403), preventing data leaks.
+ *
+ * Technical Interview Q&A Crib Sheet:
+ * Q: "Why use @Transactional(readOnly = true) on query methods?"
+ * A: It yields three major performance and safety benefits:
+ *    1. Memory: Hibernate skips creation of entity state snapshots for dirty-checking.
+ *    2. CPU: Session flush is disabled upon transaction completion.
+ *    3. Infrastructure: In cluster topologies with read-replicas, Spring routes readOnly queries
+ *       to replica nodes, freeing the primary write master for mutations.
+ * =================================================================================================
  */
 @Slf4j
 @Service

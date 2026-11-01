@@ -1,3 +1,21 @@
+/**
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: REACT CONTEXT API & MULTI-CURRENCY NORMALIZATION
+ * =================================================================================================
+ * Architecture & Design Patterns:
+ * 1. React Context API (State Management):
+ *    - Eliminates "Prop Drilling": Provides global, reactive currency preference state and formatting
+ *      utilities to deep UI trees (offer comparison tables, metrics cards, asset charts).
+ *    - Custom Hook Pattern: {@link useCurrency} encapsulates context consumption with fail-fast guards
+ *      if accessed outside of `<CurrencyProvider>`.
+ *
+ * 2. Multi-Currency Normalization:
+ *    - Base Currency Standard: Moroccan Dirham (MAD) is the primary base currency throughout the system.
+ *    - Conversion Strategy: Incoming prices in EUR or USD are normalized to base MAD before dynamic conversion
+ *      to the consumer's active display preference.
+ *    - Intl.NumberFormat: Leverages native browser ECMAScript Internationalization API for precision rounding.
+ * =================================================================================================
+ */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 

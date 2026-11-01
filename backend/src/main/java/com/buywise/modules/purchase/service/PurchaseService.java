@@ -22,11 +22,22 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Service managing consumer purchase records, ownership library, and warranty tracking.
- * 
- * Demonstrates:
- * - Domain Aggregation: Registers purchase and automatically propagates deadlines to the deadline subsystem.
- * - Resource Ownership Isolation: Enforces multi-tenant data boundaries per user.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: PURCHASE SERVICE & CROSS-MODULE EVENT PROPAGATION
+ * =================================================================================================
+ * Architectural Patterns & Transaction Flow:
+ * 1. Synchronous Domain Coordination:
+ *    - Upon registering a new purchase asset, the transaction coordinates:
+ *      a) Saving the core asset to the `purchases` table.
+ *      b) Invoking {@link DeadlineService#registerPurchaseDeadlines} to populate warranty and return deadlines.
+ *    - Enclosed within an atomic @Transactional boundary; if deadline generation fails, the entire
+ *      purchase registration rolls back to prevent inconsistent states.
+ *
+ * 2. Spring IoC & Metric Telemetry:
+ *    - Injects {@link BuyWiseMetricsService} (Prometheus Micrometer facade) via constructor injection.
+ *    - Automatically increments real-time counter metrics (`buywise_purchases_created_total`) on every
+ *      successful registration, streaming live metrics to Grafana.
+ * =================================================================================================
  */
 @Slf4j
 @Service

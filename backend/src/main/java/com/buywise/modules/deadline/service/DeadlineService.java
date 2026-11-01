@@ -24,12 +24,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Service managing consumer deadlines, expiration tracking, and reminder scheduling.
- * 
- * Demonstrates:
- * - Deterministic Deadline Calculations: Calculates days remaining and schedules reminders before critical windows expire.
- * - Idempotent Reminder Scheduling: Checks existing triggers to prevent duplicate alerts on restart.
- * - Single Responsibility Principle (SRP): Isolates lifecycle tracking of dates and alerts.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: DEADLINE & IDEMPOTENT REMINDER SERVICE
+ * =================================================================================================
+ * Architectural Principles:
+ * 1. Idempotency & Repeatable Scheduling:
+ *    - In distributed microservice and containerized environments, nodes may restart or retry jobs.
+ *    - Reminder registration checks if a trigger for a specific deadline and date already exists
+ *      before inserting, ensuring that duplicate reminders are never spawned.
+ *
+ * 2. Single Responsibility Principle (SRP):
+ *    - Decouples deadline calculations (days remaining, overdue status, urgency calculation)
+ *      from the notification delivery and presentation layers.
+ * =================================================================================================
  */
 @Slf4j
 @Service

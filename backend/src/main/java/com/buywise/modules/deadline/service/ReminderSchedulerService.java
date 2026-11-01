@@ -14,11 +14,20 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Scheduled background daemon evaluating due reminders.
- * 
- * Demonstrates:
- * - Idempotent Batch Processing: Safe to execute repeatedly without duplicating alerts.
- * - Decoupled Architecture: Evaluates triggers asynchronously without blocking user requests.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: BACKGROUND SCHEDULING & STATE MACHINE PROCESSING
+ * =================================================================================================
+ * Architectural Patterns:
+ * 1. Scheduled Background Daemon (@Scheduled):
+ *    - Runs every 15 minutes via cron expression: runs every 15 minutes.
+ *    - Decoupled from user HTTP requests; ensures timely notification dispatch without degrading
+ *      consumer web request response latencies.
+ *
+ * 2. State Machine & Idempotent Batch Processing:
+ *    - Queries ONLY reminders where `status = 'PENDING'` and `trigger_date <= CURRENT_DATE`.
+ *    - Immediately flips status to `TRIGGERED` and records `triggeredAt` timestamp in an atomic
+ *      database transaction, preventing duplicate processing if multiple scheduler instances fire.
+ * =================================================================================================
  */
 @Slf4j
 @Service

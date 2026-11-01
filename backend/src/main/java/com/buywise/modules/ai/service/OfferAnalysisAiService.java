@@ -20,12 +20,34 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Service orchestrating AI-assisted strategic analysis of competing purchasing offers.
- * 
- * Demonstrates:
- * - Anti-Hallucination Grounding: Feeds strictly verified offer data and deterministic arithmetic into prompt.
- * - Separation of Concerns: Leaves arithmetic to {@link ComparisonEngineService}; uses LLM solely for semantic trade-off synthesis.
- * - Defense in Depth: Validates structured output via {@link StructuredOutputValidator} before saving to database.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: AI ORCHESTRATION & ANTI-HALLUCINATION GUARDRAILS
+ * =================================================================================================
+ * Architectural Invariants:
+ * 1. Strict Boundary Separation (AI vs. Math Engine):
+ *    - LLMs are probabilistic language models prone to calculation errors, hallucinations, and floating-point drift.
+ *    - Therefore, the LLM NEVER performs arithmetic. Total prices, price deltas, value scores, and rankings
+ *      are calculated deterministically by {@link ComparisonEngineService} using BigDecimal.
+ *    - The deterministic calculations are injected into the prompt as IMMUTABLE GROUND TRUTH. The LLM is
+ *      constrained strictly to qualitative, semantic synthesis (trade-offs, hidden warranty clauses, return risks).
+ *
+ * 2. Grounded Prompt Engineering & Negative Constraints:
+ *    - Explicit system instructions forbid inventing prices, specs, or merchant reputation.
+ *    - Requires structured JSON schema adherence, validated through {@link StructuredOutputValidator}.
+ *
+ * 3. Multi-Tenant Data Isolation (OWASP Top 10 API Security):
+ *    - Insecure Direct Object Reference (IDOR) prevention:
+ *      {@code comparisonRepository.findByIdAndUserIdWithOffers(comparisonId, userId)} guarantees that a user
+ *      can ONLY trigger AI analysis on comparisons they own.
+ *
+ * Technical Interview Q&A Crib Sheet:
+ * Q: "How do you prevent LLMs from hallucinating incorrect prices or bogus warranty advice in production?"
+ * A: We employ a 3-layer defensive architecture:
+ *    1. Grounding Layer: The prompt includes only verified DB entities and pre-computed BigDecimal values.
+ *    2. Boundary Layer: Negative constraints in the system prompt explicitly penalize speculative math.
+ *    3. Validation Layer: Output is parsed through a strict JSON schema and sanitized by StructuredOutputValidator,
+ *       discarding any hallucinated fields or non-numeric IDs.
+ * =================================================================================================
  */
 @Slf4j
 @Service

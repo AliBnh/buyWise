@@ -10,9 +10,21 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Concrete Strategy calculating a multi-factor value index.
- * 
- * Strategy Pattern: Implements {@link ComparisonStrategy} balancing price, warranty, return window, and fees.
+ * ==============================================================================================
+ * ARCHITECTURAL DESIGN NOTE: MULTI-CRITERIA DECISION ANALYSIS (MCDA) VALUE STRATEGY
+ * ==============================================================================================
+ * Design Patterns & Principles:
+ * 1. Multi-Criteria Decision Analysis (MCDA):
+ *    - Avoids naive single-variable rankings. Balances:
+ *      * Price Competitiveness: 45% weight (relative to lowest market price)
+ *      * Warranty Longevity: 35% weight (relative to best warranty offered)
+ *      * Return Window Flexibility: 10% weight (safeguards against buyer remorse)
+ *      * Delivery Advantage: 10% weight (rewards free shipping)
+ *
+ * 2. Deterministic Arithmetic Safety:
+ *    - Uses BigDecimal divide with explicit 4-digit intermediate scale and RoundingMode.HALF_UP.
+ *    - Guarantees zero arithmetic exceptions on division and zero precision drift.
+ * ==============================================================================================
  */
 @Component
 public class BestValueScoreStrategy implements ComparisonStrategy {

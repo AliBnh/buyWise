@@ -7,7 +7,20 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 /**
- * Domain entity representing an alert or scheduled in-app notification for a deadline.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: REMINDER ENTITY & SCHEDULED ALERT DISPATCH
+ * =================================================================================================
+ * Relational Theory & BCNF:
+ * 1. Decoupled Alert Subsystem:
+ *    - Reminders are decoupled from Deadlines into their own relation to support multi-stage alerts
+ *      (e.g., alert 7 days before, alert 3 days before, alert on expiration day).
+ *    - Schema satisfies BCNF: Candidate Key is {id}; determinant {id} uniquely dictates
+ *      {deadlineId, userId, triggerDate, message, status, triggeredAt, createdAt}.
+ *
+ * 2. Idempotent State Machine:
+ *    - Uses {@link ReminderStatus} (PENDING -> TRIGGERED -> DISMISSED).
+ *    - Prevents duplicate email/push notifications during scheduled background sweeps.
+ * =================================================================================================
  */
 @Entity
 @Table(name = "reminders")

@@ -9,12 +9,44 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Root aggregate entity representing a multi-offer purchase comparison.
- * 
- * Demonstrates:
- * - Aggregate Root (DDD): Manages lifecycle and cascade operations for associated {@link Offer} child entities.
- * - Encapsulation: Offers are modified through aggregate methods.
- * - User Isolation: Partitioned by `userId`.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: BOYCE-CODD NORMAL FORM (BCNF) & AGGREGATE ROOT PATTERN
+ * =================================================================================================
+ * Relational Theory & Boyce-Codd Normal Form (BCNF):
+ * 1. Formal BCNF Condition:
+ *    A relation schema R is in BCNF with respect to a set of functional dependencies F if,
+ *    for every non-trivial functional dependency (X -> Y) in F+, X is a superkey of R.
+ *
+ * 2. Normalization Progression in BuyWise:
+ *    - 1NF: All attributes are atomic. Offers are NOT stored as delimited strings or JSON blobs
+ *      inside comparisons; each offer is decomposed into its own relation.
+ *    - 2NF: No partial key dependencies. All non-prime attributes fully depend on primary key `id`.
+ *    - 3NF: No transitive dependencies. Comparisons do not store seller ratings or product catalog
+ *      details; those reside in dedicated tables.
+ *    - BCNF: Stricter than 3NF. In this schema, the only candidate key is {id}. Every determinant
+ *      X of any functional dependency (id -> {userId, title, categoryName, status, notes})
+ *      is a true superkey. This eliminates all update, insertion, and deletion anomalies.
+ *
+ * 3. Anomaly Elimination Explained:
+ *    - Insertion Anomaly: A user can create a comparison draft before collecting offers.
+ *    - Deletion Anomaly: Deleting an offer from a comparison does not delete the parent comparison
+ *      or the seller record.
+ *    - Update Anomaly: Updating comparison metadata (e.g. title or status) modifies exactly one
+ *      tuple, avoiding duplicate data synchronization across multiple offer rows.
+ *
+ * Domain-Driven Design (DDD) - Aggregate Root:
+ *    - Comparison acts as the Aggregate Root managing the lifecycle of child {@link Offer} entities.
+ *    - Cascading operations (`CascadeType.ALL`, `orphanRemoval = true`) guarantee that offers cannot
+ *      exist as orphaned records outside an active comparison boundary.
+ *    - Bidirectional relationship consistency is enforced through domain helper methods
+ *      {@link #addOffer(Offer)} and {@link #removeOffer(Offer)}.
+ *
+ * Technical Interview Q&A Crib Sheet:
+ * Q: "What is the exact theoretical difference between 3NF and BCNF?"
+ * A: 3NF permits a dependency X -> Y where X is not a superkey IF Y is a prime attribute (part of a candidate key).
+ *    BCNF removes this exception entirely: EVERY determinant X in any non-trivial dependency X -> Y
+ *    MUST be a superkey. In BCNF, there are zero non-trivial dependencies with non-superkey determinants.
+ * =================================================================================================
  */
 @Entity
 @Table(name = "comparisons")

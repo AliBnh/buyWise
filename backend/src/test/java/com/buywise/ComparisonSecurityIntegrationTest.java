@@ -23,6 +23,22 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: MULTI-TENANT SECURITY INTEGRATION TESTING (IDOR PREVENTION)
+ * =================================================================================================
+ * Security Testing Methodology:
+ * 1. Black-Box HTTP Boundary Verification via MockMvc:
+ *    - Simulates authentic HTTP REST invocations through the entire Spring Security filter chain.
+ *    - Verifies JWT token creation, header parsing, and principal authentication.
+ *
+ * 2. Multi-Tenant Data Leakage & IDOR Prevention:
+ *    - Scenario: User Alice registers and creates a private comparison aggregate.
+ *      User Bob registers, obtains his own valid JWT, and attempts to read or mutate Alice's comparison.
+ *    - The test verifies that the system responds with HTTP 404 / Unauthorized, proving that cross-tenant
+ *      data exposure (Insecure Direct Object Reference) is mathematically impossible at the database query level.
+ * =================================================================================================
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
