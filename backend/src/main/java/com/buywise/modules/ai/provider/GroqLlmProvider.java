@@ -17,13 +17,42 @@ import java.time.Duration;
 import java.util.*;
 
 /**
- * Production implementation of {@link LlmProvider} communicating with Groq API.
- * 
- * Demonstrates:
- * - Exponential Backoff with Jitter: Adheres to Groq rate-limiting guidelines on HTTP 429 and 503.
- * - Robust Output Validation: Deserializes strict JSON objects into typed domain DTOs.
- * - Controlled Concurrency & Timeouts: Guarded with strict HTTP client timeouts.
- * - Fault Tolerance: Attempts primary model, falling back to secondary model if unavailable.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: LLM PROVIDER ADAPTER & NETWORK RESILIENCE
+ * =================================================================================================
+ * Design Patterns:
+ * 1. Adapter Pattern (GoF):
+ *    - Target: {@link LlmProvider} (Domain Port in Hexagonal Architecture).
+ *    - Adaptee: Groq REST API (OpenAI-compatible HTTP/JSON protocol).
+ *    - Adapter: {@link GroqLlmProvider}.
+ *    Prevents vendor lock-in. Switching to Anthropic Claude, OpenAI GPT-4o, or self-hosted vLLM/Ollama
+ *    requires only a new {@link LlmProvider} adapter bean with @Primary or profile activation;
+ *    zero lines of business logic or AI orchestration code will need to change (DIP / OCP).
+ *
+ * 2. Resiliency & Circuit Patterns:
+ *    - Exponential Backoff with Jitter: Prevents the "Thundering Herd" problem when high-throughput
+ *      traffic triggers rate limits (HTTP 429) or transient gateway errors (HTTP 503).
+ *      Formula: Delay = baseDelay * 2^(attempt-1) + randomJitter.
+ *    - Graceful Degradation / Model Fallback: If the primary model encounters a 404/deprecation or
+ *      temporary outage, the provider seamlessly retries with the designated fallback model.
+ *    - Mock Offline Fallback: When running in development, air-gapped CI/CD runners, or without paid API keys,
+ *      automatically provides realistic fallback responses without failing unit/integration tests.
+ *
+ * Performance & Concurrency:
+ *    - Java 11+ java.net.http.HttpClient configured for HTTP/2 multiplexing, non-blocking pipelining,
+ *      and strict connection timeouts (15s connect, 35s read).
+ *
+ * Technical Interview Q&A Crib Sheet:
+ * Q: "Why use java.net.http.HttpClient instead of RestTemplate or WebClient?"
+ * A: RestTemplate is in maintenance mode in modern Spring. WebClient requires Spring WebFlux (reactive
+ *    overhead). Java 11+ HttpClient is built into the JDK standard library, provides native HTTP/2
+ *    multiplexing, zero additional third-party dependencies, and thread-safe connection pooling.
+ *
+ * Q: "Why is 'Jitter' essential in retry loops?"
+ * A: Plain exponential backoff makes concurrent clients retry in lockstep at the exact same millisecond
+ *    intervals (e.g., 1000ms, 2000ms, 4000ms), creating synchronized traffic spikes that hammer the API.
+ *    Adding randomized jitter desynchronizes clients, flattening the concurrency curve.
+ * =================================================================================================
  */
 @Slf4j
 @Component

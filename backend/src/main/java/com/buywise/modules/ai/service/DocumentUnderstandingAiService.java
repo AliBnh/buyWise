@@ -18,11 +18,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Service orchestrating AI-assisted document parsing, semantic fact extraction, and grounding.
- * 
- * Demonstrates:
- * - Evidence-Grounded Fact Extraction: Captures verbatim text excerpts for every extracted attribute.
- * - Human-in-the-Loop Architecture: Marks all newly parsed facts as PENDING_VERIFICATION until consumer approval.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: DOCUMENT AI & HUMAN-IN-THE-LOOP (HITL) PATTERN
+ * =================================================================================================
+ * Architectural Patterns:
+ * 1. Evidence Grounding & Source Citations:
+ *    - Every extracted field (price, warranty months, return deadline, serial number) MUST be accompanied
+ *      by an exact verbatim excerpt from the source document (sourceExcerpt) and page number.
+ *    - Allows the user interface to highlight the exact bounding box or sentence where the fact was found.
+ *
+ * 2. Human-in-the-Loop (HITL) Architecture:
+ *    - Extracted facts are NEVER written directly to the active financial/warranty ledgers.
+ *    - All newly extracted facts are initialized with status {@code VerificationStatus.PENDING_VERIFICATION}.
+ *    - The consumer reviews and confirms or adjusts the extracted values before they affect deadlines or stats.
+ *
+ * 3. Resilient Graceful Degradation:
+ *    - If the remote LLM inference provider times out or fails JSON decoding, the pipeline falls back
+ *      to a deterministic heuristic regex extractor (generateHeuristicFallback) so document ingestion never crashes.
+ *
+ * Technical Interview Q&A Crib Sheet:
+ * Q: "Why use Human-in-the-Loop instead of letting AI automatically update user assets?"
+ * A: In consumer financial, legal, and warranty applications, false positives (e.g. extracting 30 days instead of
+ *    30 months warranty) can cause irreversible financial damage. HITL couples the high efficiency of AI extraction
+ *    with 100% human accountability and legal defensibility.
+ * =================================================================================================
  */
 @Slf4j
 @Service

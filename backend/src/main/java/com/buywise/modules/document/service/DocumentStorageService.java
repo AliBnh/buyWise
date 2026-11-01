@@ -41,12 +41,31 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Service orchestrating secure document upload, persistent file storage, and fact verification.
- * 
- * Demonstrates:
- * - Security Hardening: Validates and sanitizes file paths to prevent directory traversal exploits.
- * - Non-Public Storage: Documents are stored outside public web roots and accessed only through authenticated APIs.
- * - Human-in-the-Loop Verification: Applies user-verified facts back into trusted purchase domain records.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: SECURE DOCUMENT STORAGE & AUDITABLE INGESTION
+ * =================================================================================================
+ * Security Hardening & Best Practices (OWASP Storage Guidelines):
+ * 1. Path Traversal Mitigation:
+ *    - Filenames uploaded by clients are inherently untrusted.
+ *    - Enforces {@code StringUtils.cleanPath(originalFilename)} and validates that the normalized
+ *      destination path strictly starts with the configured target directory root.
+ *    - Generates unique UUID filenames on disk (e.g. {UUID}_{cleanedName}) to prevent file overwrites,
+ *      directory crawling, or executable file masking.
+ *
+ * 2. Multi-Tenant Authorization & IDOR Protection:
+ *    - Documents are tagged with owner `userId`.
+ *    - File downloads and fact verifications enforce `findByIdAndUserId`, ensuring users cannot
+ *      inspect or download invoices/receipts belonging to another customer.
+ *
+ * 3. Storage Out of Web Root:
+ *    - Files are stored in a dedicated persistent filesystem volume outside the public web server
+ *      directory, preventing direct HTTP URL execution or unrestricted file access.
+ *
+ * 4. ACID Verification Transactions:
+ *    - {@link #verifyAndApplyFact} executes within @Transactional boundary, ensuring that fact
+ *      status updates and corresponding purchase entity mutations (price, warranty, dates) succeed
+ *      or rollback atomically.
+ * =================================================================================================
  */
 @Slf4j
 @Service

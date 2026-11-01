@@ -5,12 +5,21 @@ import jakarta.persistence.*;
 import lombok.*;
 
 /**
- * User domain entity representing an authenticated BuyWise consumer or administrator.
- * 
- * Demonstrates:
- * - Encapsulation: Private state manipulated through clean accessors and constructors.
- * - Inheritance: Extends {@link AuditableEntity} for automatic created_at and updated_at tracking.
- * - Defensive Design: Unique constraint on email and fallback defaults for preferences.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: USER DOMAIN ENTITY & RELATIONAL INTEGRITY
+ * =================================================================================================
+ * Relational Theory & Candidate Keys:
+ * 1. BCNF Satisfaction:
+ *    - Candidate Keys: {id} and {email} (enforced by UNIQUE constraint on email).
+ *    - Functional Dependencies:
+ *      id -> {email, passwordHash, fullName, role, preferredCurrency, createdAt, updatedAt}
+ *      email -> {id, passwordHash, fullName, role, preferredCurrency, createdAt, updatedAt}
+ *    - Since every determinant (id, email) is a candidate key (superkey), the relation is in strict BCNF!
+ *
+ * 2. Security & Defense-in-Depth:
+ *    - Passwords are NEVER stored in plaintext; only BCrypt hashes (passwordHash) are persisted.
+ *    - Implements AuditableEntity for automated temporal auditing of account creation and updates.
+ * =================================================================================================
  */
 @Entity
 @Table(name = "users")

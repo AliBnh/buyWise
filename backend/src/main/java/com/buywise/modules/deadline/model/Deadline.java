@@ -7,7 +7,22 @@ import lombok.*;
 import java.time.LocalDate;
 
 /**
- * Domain entity tracking time-sensitive consumer events (warranties, return policies, document reviews).
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: DEADLINE ENTITY & DECOUPLED LIFECYCLE MANAGEMENT
+ * =================================================================================================
+ * Relational Theory & BCNF:
+ * 1. Normalization & Decoupling from Purchase:
+ *    - Deadlines are separated from the `purchases` table to achieve 3NF and BCNF.
+ *    - A single purchase can have multiple time-sensitive deadlines (e.g. 14-day return window,
+ *      12-month manufacturer warranty, 24-month extended warranty).
+ *    - If deadlines were embedded as columns in `purchases`, we would violate 1NF/2NF or produce
+ *      sparse null-filled tables.
+ *
+ * 2. Candidate Key & Dependencies:
+ *    - Candidate Key: {id}
+ *    - FDs: id -> {userId, purchaseId, title, deadlineType, dueDate, urgency, isCompleted, notes}
+ *    - Satisfies BCNF because the sole determinant {id} is a superkey.
+ * =================================================================================================
  */
 @Entity
 @Table(name = "deadlines")

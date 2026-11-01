@@ -24,12 +24,24 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Spring Security configuration for stateless JWT-based authentication.
- * 
- * Demonstrates:
- * - Principle of Least Privilege: Exposes only public onboarding endpoints; all domain resources require authentication.
- * - Stateless Session Architecture: Disables CSRF (not needed for stateless Bearer tokens) and server-side sessions.
- * - Dependency Injection: Constructor-based injection of {@link JwtAuthenticationFilter}.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: SPRING SECURITY 6 FILTER CHAIN & LEAST PRIVILEGE
+ * =================================================================================================
+ * Security Architecture & Modern Spring Security 6+:
+ * 1. Component-Based SecurityFilterChain:
+ *    - Replaces legacy, deprecated `WebSecurityConfigurerAdapter` with explicit `@Bean SecurityFilterChain`.
+ *    - Declares fine-grained URL authorization rules using the Principle of Least Privilege.
+ *
+ * 2. Why CSRF is Safely Disabled:
+ *    - Cross-Site Request Forgery (CSRF) exploits browsers automatically submitting stored session cookies.
+ *    - BuyWise uses Bearer JWT tokens passed in the `Authorization: Bearer <token>` HTTP header.
+ *    - Browsers do NOT attach custom Authorization headers on cross-site requests, making CSRF impossible.
+ *      Disabling CSRF reduces CPU overhead and avoids unnecessary CSRF token round-trips.
+ *
+ * 3. Stateless Session Policy:
+ *    - `SessionCreationPolicy.STATELESS` ensures Spring Security never creates or queries an HttpSession,
+ *      preventing server-side memory leaks and session fixation attacks.
+ * =================================================================================================
  */
 @Configuration
 @EnableWebSecurity

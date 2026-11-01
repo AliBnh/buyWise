@@ -18,12 +18,39 @@ import java.math.RoundingMode;
 import java.util.*;
 
 /**
- * Deterministic mathematical calculation and comparison engine.
+ * ==============================================================================================
+ * ARCHITECTURAL DESIGN NOTE: DETERMINISTIC ARITHMETIC INVARIANT & AI SEPARATION OF CONCERNS
+ * ==============================================================================================
  * 
- * Demonstrates:
- * - Deterministic Integrity: Strictly performs all arithmetic on BigDecimal numbers (no floating-point inaccuracy).
- * - Architectural Boundary: Enforces that arithmetic is never delegated to an AI/LLM model.
- * - Strategy Integration: Evaluates all registered comparison strategies via {@link ComparisonStrategyFactory}.
+ * Architectural Invariants & Technical Interview Justifications:
+ * 
+ * 1. THE NON-NEGOTIABLE AI ARCHITECTURAL BOUNDARY:
+ *    - Rule: An LLM must NEVER be responsible for arithmetic that can be computed deterministically!
+ *    - LLMs are probabilistic token predictors; they are notorious for hallucinating addition,
+ *      miscalculating percentage differences, and misstating currency amounts.
+ *    - In BuyWise, ALL cost calculations, savings percentages, price deltas, and strategy scores
+ *      are computed purely in Java by this engine. The LLM only receives verified mathematical
+ *      ground-truth as immutable context for qualitative textual summarization.
+ *
+ * 2. SINGLE RESPONSIBILITY PRINCIPLE (SRP):
+ *    - This class does exactly one thing: deterministic mathematical comparison and specification matrix
+ *      synthesis across multiple seller offers. It performs zero database persistence and zero network I/O.
+ *
+ * 3. ARITHMETIC PRECISION (BigDecimal / RoundingMode.HALF_UP):
+ *    - Explicitly sets scale to 2 decimal places for currency, 4 decimal places for intermediate ratios.
+ *    - Eliminates IEEE 754 floating-point inaccuracies and division errors.
+ *
+ * 4. OBSERVABILITY INSTRUMENTATION:
+ *    - Emits `buywise_deterministic_calculations_total{strategy="..."}` counter metrics to Prometheus
+ *      for real-time Grafana dashboard analytics.
+ *
+ * Technical Interview Q&A Crib Sheet:
+ * Q: "Why calculate comparison metrics deterministically instead of asking GPT-4 or Groq to do it?"
+ * A: LLMs lack an ALU (Arithmetic Logic Unit). They predict next tokens based on probability distributions,
+ *    meaning 199.99 + 49.99 can easily become 259.98 or 249.98. In e-commerce and fintech, inaccurate
+ *    totals destroy consumer trust and breach legal compliance. Pure Java with BigDecimal provides
+ *    deterministic, reproducible, and verifiable arithmetic with 100% mathematical certainty.
+ * ==============================================================================================
  */
 @Slf4j
 @Service

@@ -1,3 +1,21 @@
+/**
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: AUTHENTICATION CONTEXT & TOKEN LIFECYCLE MANAGEMENT
+ * =================================================================================================
+ * Architecture & Patterns:
+ * 1. Single Source of Truth for Security Principal:
+ *    - Manages authenticated User identity, JWT Bearer token, loading status, and authorization states.
+ *    - Syncs authentication tokens between memory state and browser localStorage for session persistence across page refreshes.
+ *
+ * 2. Event-Driven Token Expiry Handling:
+ *    - Subscribes to window event `buywise:unauthorized` dispatched by the Axios/Fetch API interceptor
+ *      whenever an HTTP 401 Unauthorized is intercepted, triggering automatic local state invalidation.
+ *
+ * 3. Separation of Concerns:
+ *    - UI components consume high-level authentication actions (login, register, demoLogin, logout)
+ *      without coupling to low-level REST client headers or token decoding mechanisms.
+ * =================================================================================================
+ */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../api/client';
 import { User, AuthResponse } from '../types';

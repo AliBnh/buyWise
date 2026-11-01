@@ -14,11 +14,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 /**
- * Service responsible for generating, signing, and validating JSON Web Tokens (JWT).
- * 
- * Demonstrates:
- * - Single Responsibility Principle (SRP): Concentrates cryptographic token generation and verification.
- * - Stateless Security: Enables REST endpoints to verify identity on every request without session state.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: STATELESS JWT AUTHENTICATION & CRYPTOGRAPHIC INTEGRITY
+ * =================================================================================================
+ * Architectural Principles:
+ * 1. Stateless Authentication & Horizontal Scalability:
+ *    - Traditional session-based authentication requires server-side state (sticky sessions or Redis session store).
+ *    - JWT enables 100% stateless authentication: the token contains signed claims (subject userId, email, expiration).
+ *    - Any microservice or backend container replica can verify authenticity independently using the shared secret key,
+ *      allowing seamless horizontal scaling behind round-robin load balancers.
+ *
+ * 2. Cryptographic Security (HMAC-SHA256):
+ *    - Tokens are digitally signed with an HMAC-SHA256 key (`Keys.hmacShaKeyFor`).
+ *    - Any tampering with claims (e.g. attempting to change userId from 2 to 1) invalidates the signature,
+ *      causing automatic rejection by the parser.
+ * =================================================================================================
  */
 @Slf4j
 @Component

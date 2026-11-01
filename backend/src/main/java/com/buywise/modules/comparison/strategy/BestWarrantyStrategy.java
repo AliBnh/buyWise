@@ -10,9 +10,24 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Concrete Strategy evaluating offers based on warranty longevity and protection cost-efficiency.
- * 
- * Strategy Pattern: Implements {@link ComparisonStrategy} focusing on consumer risk protection.
+ * ==============================================================================================
+ * ARCHITECTURAL DESIGN NOTE: WARRANTY STRATEGY & CONSUMER RISK REDUCTION
+ * ==============================================================================================
+ * Design Patterns & Principles:
+ * 1. Strategy Pattern (GoF):
+ *    - Implements alternative consumer priority: evaluating long-term peace of mind rather than
+ *      just initial checkout price.
+ *
+ * 2. Deterministic Risk Modeling:
+ *    - Calculates the "Effective Cost per Month of Protection":
+ *      `Cost Per Month = Total Delivered Price / Warranty Duration in Months`.
+ *    - A product costing 6,000 MAD with 24 months warranty costs 250 MAD/month protected.
+ *      A product costing 5,500 MAD with 12 months warranty costs 458 MAD/month protected.
+ *      This mathematical modeling reveals to consumers that the "cheaper" offer is actually riskier.
+ *
+ * 3. Tie-breaking Secondary Comparator:
+ *    - Offers with equal warranty longevity are tie-broken by lower total price.
+ * ==============================================================================================
  */
 @Component
 public class BestWarrantyStrategy implements ComparisonStrategy {

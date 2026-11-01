@@ -8,11 +8,35 @@ import lombok.*;
 import java.math.BigDecimal;
 
 /**
- * Child entity representing a specific seller offer within a comparison.
- * 
- * Demonstrates:
- * - Deterministic Invariants: {@link #recalculateTotalPrice()} ensures total price always equals
- *   (basePrice + deliveryFee + additionalFees - discountAmount) without depending on UI or external systems.
+ * =================================================================================================
+ * ARCHITECTURAL DESIGN NOTE: OFFER ENTITY & FINANCIAL ARITHMETIC PRECISION
+ * =================================================================================================
+ * Relational Theory & BCNF:
+ * 1. BCNF Compliance:
+ *    - Relation: offers(id, comparison_id, seller_name, base_price, delivery_fee, additional_fees,
+ *                discount_amount, total_price, warranty_months, return_window_days, ...)
+ *    - Primary / Candidate Key: {id}
+ *    - Functional Dependencies: id -> {comparison_id, seller_name, base_price, ...}
+ *    - Since the determinant {id} is the unique superkey, this relation satisfies strict BCNF.
+ *
+ * 2. Financial Arithmetic Invariants (IEEE 754 Float Avoidance):
+ *    - Monetary fields use java.math.BigDecimal with DB precision 12, scale 2 (mapped to NUMERIC(12,2) in PostgreSQL).
+ *    - Float/Double primitives are strictly prohibited in financial ledgers due to binary representation
+ *      drift (e.g. 0.1 + 0.2 = 0.30000000000000004).
+ *    - {@link #recalculateTotalPrice()} enforces the deterministic domain equation:
+ *      Total = BasePrice + DeliveryFee + AdditionalFees - DiscountAmount.
+ *
+ * 3. Database Integrity & Constraints:
+ *    - Foreign key constraint to parent `comparisons` table ensures referential integrity (RESTRICT / CASCADE).
+ *    - DB check constraints ensure non-negative prices (base_price >= 0, total_price >= 0).
+ *
+ * Technical Interview Q&A Crib Sheet:
+ * Q: "Why store total_price in the table if it is derived from base_price, delivery_fee, etc.?"
+ * A: Storing the computed total_price allows high-performance database indexing (B-Tree index on total_price),
+ *    enabling instant SQL ordering (ORDER BY total_price ASC) and pagination across millions of offers
+ *    without requiring a compute-heavy full table scan on every query. The entity encapsulates
+ *    recalculateTotalPrice() to guarantee zero drift between parts and total.
+ * =================================================================================================
  */
 @Entity
 @Table(name = "offers")
