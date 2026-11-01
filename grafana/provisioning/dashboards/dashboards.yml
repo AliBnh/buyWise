@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: 'BuyWise Dashboards'
+    orgId: 1
+    folder: 'BuyWise Platform'
+    folderUid: 'buywise'
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
