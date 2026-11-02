@@ -14,7 +14,7 @@ import java.math.BigDecimal;
  * DEFENSIVE AI GUARDRAIL — STRUCTURED OUTPUT VALIDATION
  * ==============================================================================================
  * 
- * ARCHITECTURAL DESIGN & INTERVIEW JUSTIFICATIONS:
+ * ARCHITECTURAL DESIGN & DEFENSIVE INVARIANTS:
  * 
  * 1. THE "UNTRUSTED BOUNDARY" PATTERN:
  *    - In traditional software, input validation is applied to user HTTP requests.

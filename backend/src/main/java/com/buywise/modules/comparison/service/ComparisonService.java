@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
  *    - Even if a malicious tenant guesses an integer ID belonging to another user, the database
  *      returns Optional.empty(), which translates to HTTP 404 (or 403), preventing data leaks.
  *
- * Technical Interview Q&A Crib Sheet:
+ * Architectural Trade-off Analysis & FAQ:
  * Q: "Why use @Transactional(readOnly = true) on query methods?"
  * A: It yields three major performance and safety benefits:
  *    1. Memory: Hibernate skips creation of entity state snapshots for dirty-checking.

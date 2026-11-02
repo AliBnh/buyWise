@@ -42,7 +42,7 @@ import java.util.*;
  *    - Java 11+ java.net.http.HttpClient configured for HTTP/2 multiplexing, non-blocking pipelining,
  *      and strict connection timeouts (15s connect, 35s read).
  *
- * Technical Interview Q&A Crib Sheet:
+ * Architectural Trade-off Analysis & FAQ:
  * Q: "Why use java.net.http.HttpClient instead of RestTemplate or WebClient?"
  * A: RestTemplate is in maintenance mode in modern Spring. WebClient requires Spring WebFlux (reactive
  *    overhead). Java 11+ HttpClient is built into the JDK standard library, provides native HTTP/2

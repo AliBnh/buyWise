@@ -36,7 +36,7 @@ import java.util.List;
  *    - If the remote LLM inference provider times out or fails JSON decoding, the pipeline falls back
  *      to a deterministic heuristic regex extractor (generateHeuristicFallback) so document ingestion never crashes.
  *
- * Technical Interview Q&A Crib Sheet:
+ * Architectural Trade-off Analysis & FAQ:
  * Q: "Why use Human-in-the-Loop instead of letting AI automatically update user assets?"
  * A: In consumer financial, legal, and warranty applications, false positives (e.g. extracting 30 days instead of
  *    30 months warranty) can cause irreversible financial damage. HITL couples the high efficiency of AI extraction

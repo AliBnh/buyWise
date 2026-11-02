@@ -1,7 +1,7 @@
 # ==============================================================================================
 # BUYWISE — MULTI-SERVICE PRODUCTION-MINDED DOCKER COMPOSE CONFIGURATION
 # ==============================================================================================
-# ARCHITECTURAL DESIGN & INTERVIEW JUSTIFICATIONS:
+# ARCHITECTURAL DESIGN & ORCHESTRATION SPECIFICATIONS:
 #
 # 1. SERVICE DEPENDENCY & STARTUP SYNCHRONIZATION (The "Why not simple depends_on?" Question):
 #    - Problem: A standard `depends_on: [postgres]` only waits until the Postgres container starts,

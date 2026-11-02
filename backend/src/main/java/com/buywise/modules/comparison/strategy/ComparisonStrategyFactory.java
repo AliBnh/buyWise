@@ -38,7 +38,7 @@ import java.util.Map;
  *    - Sole responsibility is mapping `StrategyType` keys to `ComparisonStrategy` beans and managing
  *      their lifecycle in an O(1) lookup map. It performs zero arithmetic or ranking calculations.
  *
- * COMMON TECHNICAL INTERVIEW QUESTIONS & ANSWERS:
+ * ARCHITECTURAL DESIGN DECISIONS & PERFORMANCE BENCHMARKS:
  * Q1: "How does Spring automatically populate the `List<ComparisonStrategy> strategies` parameter?"
  * A1: During ApplicationContext initialization, Spring's BeanFactory discovers all managed beans
  *     implementing `ComparisonStrategy`. When resolving constructor dependencies for this factory,

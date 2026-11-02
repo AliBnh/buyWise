@@ -32,7 +32,7 @@ import java.util.List;
  * 4. Single Responsibility Principle (SRP):
  *    - Focuses strictly on the mathematical or logical evaluation and ordering of offers.
  *
- * TECHNICAL INTERVIEW HIGHLIGHT:
+ * ARCHITECTURAL VALUE & TRANSPARENCY:
  * Q: "Why is the Strategy pattern critical in an AI-powered purchase intelligence platform?"
  * A: Because purchase decisions are multi-dimensional. A consumer buying a refrigerator prioritizes
  *    long warranties, while a consumer buying an adapter prioritizes lowest immediate price.

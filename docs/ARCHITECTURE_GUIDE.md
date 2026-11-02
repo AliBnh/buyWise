@@ -1,6 +1,6 @@
-# BuyWise Technical Interview & Architecture Defense Guide
+# BuyWise Architecture & System Design Deep-Dive Guide
 
-This guide is designed for senior software engineering interviewers, architects, and technical evaluators inspecting the **BuyWise** platform.
+This guide is designed for systems architects, senior software engineers, and technical evaluators inspecting the **BuyWise** platform.
 
 ---
 

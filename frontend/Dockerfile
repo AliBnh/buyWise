@@ -1,7 +1,7 @@
 # ==============================================================================================
 # BUYWISE FRONTEND — MULTI-STAGE VITE + NGINX DOCKERFILE
 # ==============================================================================================
-# ARCHITECTURAL DESIGN & INTERVIEW JUSTIFICATIONS:
+# ARCHITECTURAL DESIGN & CONTAINER SPECIFICATIONS:
 #
 # 1. WHY NGINX FOR SINGLE PAGE APPLICATIONS (SPAs)?
 #    - In development, Vite runs an internal Node.js dev server with Hot Module Replacement (HMR).

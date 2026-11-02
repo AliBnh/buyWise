@@ -41,7 +41,7 @@ import java.util.List;
  *    - Bidirectional relationship consistency is enforced through domain helper methods
  *      {@link #addOffer(Offer)} and {@link #removeOffer(Offer)}.
  *
- * Technical Interview Q&A Crib Sheet:
+ * Relational Normalization Deep Dive:
  * Q: "What is the exact theoretical difference between 3NF and BCNF?"
  * A: 3NF permits a dependency X -> Y where X is not a superkey IF Y is a prime attribute (part of a candidate key).
  *    BCNF removes this exception entirely: EVERY determinant X in any non-trivial dependency X -> Y

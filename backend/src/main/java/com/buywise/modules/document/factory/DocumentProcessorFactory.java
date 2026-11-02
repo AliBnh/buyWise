@@ -22,7 +22,7 @@ import java.util.List;
  *    - If an unrecognized MIME type is supplied, it falls back to {@link PlainTextDocumentProcessor}
  *      rather than throwing NullPointerException, adhering to resilient API design.
  *
- * Technical Interview Q&A Crib Sheet:
+ * Spring IoC Design Decisions & FAQ:
  * Q: "How does Spring populate List<DocumentProcessor> without an explicit @Qualifier?"
  * A: When a constructor or field requires List<T>, Spring's DefaultListableBeanFactory inspects the
  *    bean registry for all singleton beans implementing interface T, resolves dependency order,

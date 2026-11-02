@@ -363,7 +363,7 @@ The automated CI workflow is configured in [`.github/workflows/ci.yml`](file:///
 - [**Software Requirements Specification (SRS)**](docs/SRS.md): IEEE 830-compliant specification covering all functional requirements, use cases, and NFRs.
 - [**System Architecture Documentation**](docs/ARCHITECTURE.md): C4 diagrams, ERD, data isolation, and AI boundary guardrails.
 - [**Software Engineering Concepts & Patterns**](docs/ENGINEERING_CONCEPTS.md): OOP pillars, SOLID principles with code references, Strategy, Factory, and Repository patterns.
-- [**Technical Interview Defense Guide**](docs/INTERVIEW_GUIDE.md): Architectural decisions, trade-offs, security, and scalability defense.
+- [**Architecture & System Design Guide**](docs/ARCHITECTURE_GUIDE.md): Architectural decisions, trade-offs, security, and scalability defense.
 - [**REST API Reference Guide**](docs/API_GUIDE.md): Complete endpoint documentation with JSON request/response examples.
 - [**Evaluator Demo Walkthrough**](docs/DEMO_GUIDE.md): Step-by-step walkthrough of all 7 core workflows.
 
