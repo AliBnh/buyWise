@@ -1,7 +1,7 @@
 # ==============================================================================================
 # BUYWISE CI/CD PIPELINE — GITHUB ACTIONS AUTOMATION
 # ==============================================================================================
-# ARCHITECTURAL DESIGN & INTERVIEW JUSTIFICATIONS:
+# ARCHITECTURAL DESIGN & CI/CD PIPELINE SPECIFICATIONS:
 #
 # 1. PARALLEL JOB EXECUTION (Fail-Fast & Time Optimization):
 #    - `backend-test` and `frontend-test` execute concurrently on independent `ubuntu-latest` VMs.

@@ -40,7 +40,7 @@ import java.util.List;
  *      {@code comparisonRepository.findByIdAndUserIdWithOffers(comparisonId, userId)} guarantees that a user
  *      can ONLY trigger AI analysis on comparisons they own.
  *
- * Technical Interview Q&A Crib Sheet:
+ * Architectural Trade-off Analysis & FAQ:
  * Q: "How do you prevent LLMs from hallucinating incorrect prices or bogus warranty advice in production?"
  * A: We employ a 3-layer defensive architecture:
  *    1. Grounding Layer: The prompt includes only verified DB entities and pre-computed BigDecimal values.

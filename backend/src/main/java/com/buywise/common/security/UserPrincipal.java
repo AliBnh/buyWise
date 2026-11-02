@@ -31,7 +31,7 @@ import java.util.Collections;
  *    - {@link #create(User)} encapsulates mapping domain user state (roles, email, ID) into authorities
  *      and principal properties in a clean, immutable manner.
  *
- * Technical Interview Q&A Crib Sheet:
+ * Architectural Trade-off Analysis & FAQ:
  * Q: "Why not simply make the User JPA entity implement UserDetails directly?"
  * A: Making JPA entities implement framework interfaces creates tight architectural coupling,
  *    violates SRP, and can cause subtle serialization/JSON bugs or lazy-loading session leaks

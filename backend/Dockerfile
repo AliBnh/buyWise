@@ -1,7 +1,7 @@
 # ==============================================================================================
 # BUYWISE BACKEND — MULTI-STAGE CONTAINER DOCKERFILE
 # ==============================================================================================
-# ARCHITECTURAL DESIGN & INTERVIEW JUSTIFICATIONS:
+# ARCHITECTURAL DESIGN & CONTAINER SPECIFICATIONS:
 #
 # 1. WHY MULTI-STAGE BUILDS?
 #    - Standard builds bundle Maven, JDK compiler tools, build dependencies, and source files into

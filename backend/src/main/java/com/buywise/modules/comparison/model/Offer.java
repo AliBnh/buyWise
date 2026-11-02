@@ -30,7 +30,7 @@ import java.math.BigDecimal;
  *    - Foreign key constraint to parent `comparisons` table ensures referential integrity (RESTRICT / CASCADE).
  *    - DB check constraints ensure non-negative prices (base_price >= 0, total_price >= 0).
  *
- * Technical Interview Q&A Crib Sheet:
+ * Performance & Normalization Trade-offs:
  * Q: "Why store total_price in the table if it is derived from base_price, delivery_fee, etc.?"
  * A: Storing the computed total_price allows high-performance database indexing (B-Tree index on total_price),
  *    enabling instant SQL ordering (ORDER BY total_price ASC) and pagination across millions of offers

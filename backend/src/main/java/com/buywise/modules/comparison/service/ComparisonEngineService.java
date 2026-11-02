@@ -22,7 +22,7 @@ import java.util.*;
  * ARCHITECTURAL DESIGN NOTE: DETERMINISTIC ARITHMETIC INVARIANT & AI SEPARATION OF CONCERNS
  * ==============================================================================================
  * 
- * Architectural Invariants & Technical Interview Justifications:
+ * Architectural Invariants & Engineering Rationale:
  * 
  * 1. THE NON-NEGOTIABLE AI ARCHITECTURAL BOUNDARY:
  *    - Rule: An LLM must NEVER be responsible for arithmetic that can be computed deterministically!
@@ -44,7 +44,7 @@ import java.util.*;
  *    - Emits `buywise_deterministic_calculations_total{strategy="..."}` counter metrics to Prometheus
  *      for real-time Grafana dashboard analytics.
  *
- * Technical Interview Q&A Crib Sheet:
+ * Architectural Rationale & Trade-offs:
  * Q: "Why calculate comparison metrics deterministically instead of asking GPT-4 or Groq to do it?"
  * A: LLMs lack an ALU (Arithmetic Logic Unit). They predict next tokens based on probability distributions,
  *    meaning 199.99 + 49.99 can easily become 259.98 or 249.98. In e-commerce and fintech, inaccurate
