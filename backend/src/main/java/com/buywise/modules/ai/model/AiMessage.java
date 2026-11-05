@@ -6,6 +6,14 @@ import lombok.*;
 
 import java.time.Instant;
 
+/**
+ * Entity storing individual message entries within a conversational AI thread.
+ * 
+ * Demonstrates:
+ * - Circular Reference Prevention: Uses {@link JsonIgnore} on the parent relationship to prevent Jackson serialization loops.
+ * - Semi-Structured Data Storage: Persists tool calling invocations, executed tool responses, and cited
+ *   source references as JSON text columns for auditability.
+ */
 @Entity
 @Table(name = "ai_messages")
 @Getter

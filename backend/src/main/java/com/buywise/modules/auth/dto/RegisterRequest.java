@@ -8,6 +8,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data Transfer Object (DTO) capturing user registration inputs.
+ * 
+ * Demonstrates:
+ * - Data Transfer Object Pattern: Decouples public API contract from internal JPA entity schemas.
+ * - Declarative Bean Validation (JSR 380): Enforces constraints before reaching the service layer.
+ * - Secure Credential Handling: Isolates plaintext password to the ingestion boundary prior to BCrypt hashing.
+ */
 @Data
 @Builder
 @NoArgsConstructor

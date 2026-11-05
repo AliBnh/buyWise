@@ -6,6 +6,13 @@ import { LoginPage } from '../pages/LoginPage';
 import { AuthProvider } from '../context/AuthContext';
 import { CurrencyProvider } from '../context/CurrencyContext';
 
+/**
+ * Frontend Component Test Suite for {@link LoginPage}.
+ * 
+ * Demonstrates:
+ * - Accessibility & Form Field Verification: Ensures form elements and credentials inputs are present.
+ * - Demo Seeding UX Verification: Confirms presence of quick-evaluation demo login CTA for reviewers.
+ */
 describe('LoginPage Component', () => {
   it('should render email, password input and One-Click Demo Login button', () => {
     render(

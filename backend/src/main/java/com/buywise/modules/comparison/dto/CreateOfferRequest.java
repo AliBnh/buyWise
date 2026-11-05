@@ -12,6 +12,14 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.Map;
 
+/**
+ * Ingress DTO capturing an individual merchant offer within a comparison workspace.
+ * 
+ * Demonstrates:
+ * - Exact Decimal Validation: Enforces @DecimalMin(value = "0.0") on BigDecimal monetary fields.
+ * - Dynamic Schema Extensibility: Accepts arbitrary merchant specifications via Map<String, Object>
+ *   which is serialized into JSON text for PostgreSQL persistence.
+ */
 @Data
 @Builder
 @NoArgsConstructor

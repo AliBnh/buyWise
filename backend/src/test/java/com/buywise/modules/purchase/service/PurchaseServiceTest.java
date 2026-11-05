@@ -27,6 +27,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Isolated unit test suite for {@link PurchaseService} validating warranty date propagation and portfolio calculations.
+ * 
+ * Demonstrates:
+ * - SecurityContext Mocking: Injects simulated {@link UserPrincipal} into ThreadLocal SecurityContextHolder
+ *   to authenticate service calls in standalone test environments.
+ * - Temporal Invariant Verification: Tests that warranty expiration dates equal purchaseDate.plusMonths(warrantyMonths).
+ * - Cross-Service Coordination: Verifies that creating an asset triggers deadline schedule registration via {@link DeadlineService}.
+ */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Purchase Service — Ownership & Warranty Invariant Verification")
 class PurchaseServiceTest {
@@ -52,6 +61,9 @@ class PurchaseServiceTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
+    /**
+     * Verifies that registering an item with a 24-month warranty accurately schedules the expiration exactly 2 years later.
+     */
     @Test
     @DisplayName("Should register purchase and compute exact warranty expiration date: purchaseDate + warrantyMonths")
     void testRegisterPurchaseWarrantyCalculation() {
@@ -95,6 +107,9 @@ class PurchaseServiceTest {
         verify(deadlineService).registerPurchaseDeadlines(savedMock);
     }
 
+    /**
+     * Verifies aggregation logic computing total portfolio expenditure and active warranty count.
+     */
     @Test
     @DisplayName("Should calculate purchase library ownership metrics")
     void testGetPurchaseStats() {

@@ -14,6 +14,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit test suite verifying AI output validation guardrails and schema normalization.
+ * 
+ * Demonstrates:
+ * - Anti-Hallucination Guardrail Testing: Ensures corrupted, empty, or ungrounded model outputs are rejected.
+ * - Defensive Sanitization: Tests automated recovery and fallback bounding for confidence scores [0.0, 1.0].
+ */
 @DisplayName("Structured Output Validator — AI Guardrail Verification")
 class StructuredOutputValidatorTest {
 
@@ -24,6 +31,9 @@ class StructuredOutputValidatorTest {
         validator = new StructuredOutputValidator();
     }
 
+    /**
+     * Confirms that well-formed AI offer evaluations pass validation without exceptions.
+     */
     @Test
     @DisplayName("Should accept valid offer analysis with executive summary and confidence score")
     void testValidOfferAnalysis() {
@@ -36,6 +46,9 @@ class StructuredOutputValidatorTest {
         assertDoesNotThrow(() -> validator.validateOfferAnalysis(result));
     }
 
+    /**
+     * Confirms that missing executive summaries trigger a fast fail-safe BusinessException.
+     */
     @Test
     @DisplayName("Should throw BusinessException when executive summary is null or empty")
     void testOfferAnalysisMissingSummary() {
@@ -47,6 +60,9 @@ class StructuredOutputValidatorTest {
         assertThrows(BusinessException.class, () -> validator.validateOfferAnalysis(result));
     }
 
+    /**
+     * Confirms that aberrant confidence scores (e.g., > 1.0) are clamped to safe defaults (0.85).
+     */
     @Test
     @DisplayName("Should normalize out-of-range confidence scores to standard default")
     void testNormalizeConfidenceScore() {
@@ -59,6 +75,9 @@ class StructuredOutputValidatorTest {
         assertEquals(new BigDecimal("0.85"), result.getConfidenceScore());
     }
 
+    /**
+     * Confirms that document extraction outputs missing fact keys are repaired with a fallback key.
+     */
     @Test
     @DisplayName("Should repair missing fact keys in document extraction results")
     void testRepairMissingFactKeys() {

@@ -8,6 +8,12 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Ingress DTO creating a comparison workspace, optionally bootstrapping it with initial merchant offers.
+ * 
+ * Demonstrates:
+ * - Atomic Composite Creation: Allows creating a parent comparison and child offers in a single transaction.
+ */
 @Data
 @Builder
 @NoArgsConstructor

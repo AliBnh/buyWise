@@ -1,3 +1,10 @@
+# ==============================================================================================
+# GRAFANA AUTOMATED DASHBOARD PROVISIONING
+# ==============================================================================================
+# Automatically mounts and loads pre-built dashboard JSON definitions on startup from
+# /var/lib/grafana/dashboards (mapped to local ./grafana/dashboards in docker-compose).
+# ==============================================================================================
+
 apiVersion: 1
 
 providers:
@@ -6,7 +13,9 @@ providers:
     folder: 'BuyWise Platform'
     folderUid: 'buywise'
     type: file
+    # Prevents accidental deletion of system dashboards from UI
     disableDeletion: true
+    # Scans for dashboard updates every 10 seconds without needing container restart
     updateIntervalSeconds: 10
     allowUiUpdates: true
     options:

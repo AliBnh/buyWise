@@ -6,6 +6,14 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+/**
+ * Entity tracking merchant credibility, verified vendor status, and default return policies.
+ * 
+ * Demonstrates:
+ * - Boyce-Codd Normal Form (BCNF): Normalizes vendor metadata so merchant reputation scores
+ *   are stored once and linked across thousands of offers rather than duplicated.
+ * - Exact Numeric Representation: Uses BigDecimal for reputationScore to preserve precise rating averages.
+ */
 @Entity
 @Table(name = "sellers")
 @Getter

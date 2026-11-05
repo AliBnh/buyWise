@@ -17,6 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.stream.Collectors;
 
+/**
+ * REST controller consolidating multi-domain telemetry for the main application landing view.
+ * 
+ * Demonstrates:
+ * - API Gateway / Backend-for-Frontend (BFF) Pattern: Aggregates data from Purchase, Comparison,
+ *   and Deadline bounded contexts into a single unified JSON response, preventing HTTP waterfall
+ *   round-trips on initial page render.
+ * - Least Privilege / Multi-Tenancy: Scopes all aggregated sub-queries strictly to the authenticated user ID.
+ */
 @RestController
 @RequestMapping("/api/v1/dashboard")
 @RequiredArgsConstructor
@@ -27,24 +36,33 @@ public class DashboardController {
     private final ComparisonService comparisonService;
     private final DeadlineService deadlineService;
 
+    /**
+     * Gathers high-level summary statistics, recent comparisons, owned assets, and imminent expiration alerts.
+     * 
+     * @return HTTP 200 OK with fully composed {@link DashboardOverviewDto}.
+     */
     @GetMapping("/overview")
     @Operation(summary = "Get high-level dashboard metrics for the authenticated user")
     public ResponseEntity<DashboardOverviewDto> getOverview() {
         UserPrincipal user = SecurityUtils.getCurrentUser();
         PurchaseStatsDto stats = purchaseService.getPurchaseStats();
 
+        // Fetches top 3 recent comparisons to minimize payload weight
         var recentComparisons = comparisonService.getUserComparisons().stream()
                 .limit(3)
                 .collect(Collectors.toList());
 
+        // Fetches top 3 recent purchases
         var recentPurchases = purchaseService.getUserPurchases().stream()
                 .limit(3)
                 .collect(Collectors.toList());
 
+        // Gathers top 5 imminent deadlines occurring within the next 30 days
         var upcomingDeadlines = deadlineService.getUpcomingDeadlines(30).stream()
                 .limit(5)
                 .collect(Collectors.toList());
 
+        // Gathers pending notifications requiring consumer attention
         var activeReminders = deadlineService.getActiveReminders();
 
         DashboardOverviewDto overview = DashboardOverviewDto.builder()

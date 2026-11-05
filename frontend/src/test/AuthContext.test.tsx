@@ -3,6 +3,14 @@ import { render, screen, act } from '@testing-library/react';
 import React from 'react';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
+/**
+ * State Management Test Suite for {@link AuthContext}.
+ * 
+ * Demonstrates:
+ * - React Context Provider Lifecycle Testing: Verifies bootstrap from localStorage on mount.
+ * - Synchronous State Mutation: Tests transition between authenticated and unauthenticated states.
+ * - Test Isolation: Flushes localStorage in beforeEach to prevent state leakage across test cases.
+ */
 const TestComponent = () => {
   const { user, token, isAuthenticated, demoLogin, logout } = useAuth();
   return (

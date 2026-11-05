@@ -7,6 +7,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data Transfer Object (DTO) capturing user authentication credentials.
+ * 
+ * Demonstrates:
+ * - Fail-Fast Input Validation: Prevents unformatted emails or blank passwords from consuming CPU cycles in BCrypt.
+ */
 @Data
 @Builder
 @NoArgsConstructor

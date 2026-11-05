@@ -12,6 +12,13 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Ingress DTO registering an acquired asset into the user's permanent ownership library.
+ * 
+ * Demonstrates:
+ * - Temporal Invariant Input: Captures purchaseDate and warrantyMonths used to automatically
+ *   derive warrantyExpirationDate and schedule calendar deadline alerts.
+ */
 @Data
 @Builder
 @NoArgsConstructor

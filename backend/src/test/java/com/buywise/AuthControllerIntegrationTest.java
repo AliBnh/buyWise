@@ -17,6 +17,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Integration test suite verifying user onboarding, credential authentication, and JWT lifecycle.
+ * 
+ * Demonstrates:
+ * - Full-Stack Slice Integration: Tests interaction between MockMvc, SecurityConfig filter chain,
+ *   BCryptPasswordEncoder, and in-memory H2 database under active test profile.
+ * - JSON Path Assertion: Validates strict compliance with REST API contract schemas.
+ * - Unauthenticated Rejection: Verifies unauthenticated access to domain resources returns 403 Forbidden.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -29,6 +38,10 @@ class AuthControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    /**
+     * Verifies that registering with valid credentials creates an account in H2, hashes the password,
+     * and returns a signed JWT with standard user claims.
+     */
     @Test
     @DisplayName("POST /api/v1/auth/register should create account and return JWT Bearer token")
     void testRegisterEndpoint() throws Exception {
@@ -49,6 +62,9 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.preferredCurrency").value("MAD"));
     }
 
+    /**
+     * Verifies that authenticating registered credentials against BCrypt hashes emits a valid access token.
+     */
     @Test
     @DisplayName("POST /api/v1/auth/login should authenticate registered user")
     void testLoginEndpoint() throws Exception {
@@ -76,8 +92,11 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.email").value("login.test@buywise.com"));
     }
 
+    /**
+     * Verifies that accessing protected domain resources without an Authorization Bearer header is rejected.
+     */
     @Test
-    @DisplayName("GET /api/v1/purchases should return 403/401 when accessed without token")
+    @DisplayName("GET /api/v1/purchases should return 403 when accessed without token")
     void testProtectedEndpointRejectsUnauthenticatedAccess() throws Exception {
         mockMvc.perform(get("/api/v1/purchases"))
                 .andExpect(status().isForbidden());
