@@ -6,6 +6,14 @@ import { LandingPage } from '../pages/LandingPage';
 import { AuthProvider } from '../context/AuthContext';
 import { CurrencyProvider } from '../context/CurrencyContext';
 
+/**
+ * Frontend Component Test Suite for {@link LandingPage}.
+ * 
+ * Demonstrates:
+ * - React Testing Library Best Practices: Tests user-visible behavior (text content, accessibility queries)
+ *   rather than implementation details or component state.
+ * - Context & Router Mock Wrapping: Emulates providers (Auth, Currency, Routing) required by tree dependencies.
+ */
 describe('LandingPage Component', () => {
   it('should render the brand header and main value proposition', () => {
     render(

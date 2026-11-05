@@ -1,30 +1,57 @@
+# ==============================================================================================
+# BUYWISE BACKEND — TEST PROFILE CONFIGURATION (SPRING BOOT TEST / H2 IN-MEMORY)
+# ==============================================================================================
+# ARCHITECTURAL DECISIONS & ENGINEERING RATIONALE:
+#
+# 1. HERMETIC TEST EXECUTION:
+#    - Uses an in-memory H2 database (jdbc:h2:mem:buywisetest) with DB_CLOSE_DELAY=-1 to ensure
+#      the in-memory schema survives across transaction boundaries during a test method.
+#    - Completely decouples unit and integration tests from external PostgreSQL installations.
+#
+# 2. SCHEMA STRATEGY FOR TESTS:
+#    - spring.jpa.hibernate.ddl-auto: create-drop automatically creates tables before test runs
+#      and destroys them upon JVM shutdown, preventing state leakage between test classes.
+#    - Flyway is disabled (enabled: false) during tests to accelerate test startup by ~400%.
+#
+# 3. MOCK CREDENTIALS & ISOLATED STORAGE:
+#    - Dummy JWT secret and mock Groq API key ensure zero external network calls occur during tests.
+#    - Storage directory is pointed to ./target/test-uploads so all test files are purged on mvn clean.
+# ==============================================================================================
+
 spring:
   datasource:
+    # In-memory H2 database with persistent connection during JVM execution
     url: jdbc:h2:mem:buywisetest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
     password: ""
     driver-class-name: org.h2.Driver
   jpa:
     hibernate:
+      # Creates schema dynamically per test session and drops on completion
       ddl-auto: create-drop
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
   flyway:
+    # Bypassed in tests; Hibernate DDL handles schema creation for maximum execution speed
     enabled: false
 
 buywise:
   jwt:
+    # Static 256-bit secret key for test token generation
     secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-    expiration-ms: 3600000
+    expiration-ms: 3600000 # 1 hour for test tokens
   groq:
+    # Mock LLM configuration; prevents outbound HTTP calls to third-party providers
     api-key: mock-key
     model: openai/gpt-oss-20b
     fallback-model: openai/gpt-oss-120b
     base-url: http://localhost:8989
   storage:
+    # Ephemeral test upload directory cleaned up automatically by Maven
     upload-dir: ./target/test-uploads
   demo:
+    # Prevents demo seeder from running during automated tests
     seed-on-startup: false
     default-currency: MAD

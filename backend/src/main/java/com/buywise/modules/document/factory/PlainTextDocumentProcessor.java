@@ -10,6 +10,10 @@ import java.util.stream.Collectors;
 
 /**
  * Concrete processor for text, markdown, CSV, and plain receipt formats.
+ * 
+ * Demonstrates:
+ * - Strategy Implementation: Efficiently decodes UTF-8 text streams using BufferedReader.
+ * - Auto-Closable Resource Management: Employs try-with-resources to guarantee stream closure and prevent file descriptor leaks.
  */
 @Component
 public class PlainTextDocumentProcessor implements DocumentProcessor {

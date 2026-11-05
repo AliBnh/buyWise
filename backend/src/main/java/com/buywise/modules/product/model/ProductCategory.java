@@ -5,6 +5,14 @@ import lombok.*;
 
 import java.time.Instant;
 
+/**
+ * Entity representing canonical product taxonomy categories.
+ * 
+ * Demonstrates:
+ * - Boyce-Codd Normal Form (BCNF): Isolates category metadata from comparisons and offers,
+ *   preventing update and deletion anomalies.
+ * - Semantic Slugs: Guarantees unique URL-safe routing keys.
+ */
 @Entity
 @Table(name = "product_categories")
 @Getter

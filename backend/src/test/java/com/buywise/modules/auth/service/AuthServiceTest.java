@@ -26,6 +26,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Isolated unit test suite for {@link AuthService} validating user registration, credentials, and token emission.
+ * 
+ * Demonstrates:
+ * - Pure Mockito Unit Testing: Employs {@link MockitoExtension} without starting the Spring IoC container,
+ *   achieving sub-second test execution.
+ * - AAA Pattern (Arrange-Act-Assert): Standardizes test readability across setup, execution, and verification phases.
+ * - Negative Testing & Invariant Protection: Ensures duplicate emails throw domain BusinessExceptions.
+ */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Auth Service — User Onboarding & Authentication Tests")
 class AuthServiceTest {
@@ -59,6 +68,9 @@ class AuthServiceTest {
                 .build();
     }
 
+    /**
+     * Verifies that registering an unregistered email saves user with hashed password and generates a valid JWT.
+     */
     @Test
     @DisplayName("Should register new user successfully with encrypted password and JWT token")
     void testRegisterSuccess() {
@@ -83,6 +95,9 @@ class AuthServiceTest {
         verify(userRepository).save(any(User.class));
     }
 
+    /**
+     * Verifies that attempting to register an existing email aborts registration with a BusinessException.
+     */
     @Test
     @DisplayName("Should throw BusinessException when registering an already registered email")
     void testRegisterDuplicateEmail() {
@@ -99,6 +114,9 @@ class AuthServiceTest {
         verify(userRepository, never()).save(any(User.class));
     }
 
+    /**
+     * Verifies that authenticating with valid credentials returns user profile and access token.
+     */
     @Test
     @DisplayName("Should authenticate user and return valid token on correct credentials")
     void testLoginSuccess() {

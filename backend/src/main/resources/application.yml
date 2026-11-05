@@ -1,46 +1,101 @@
+# ==============================================================================================
+# BUYWISE BACKEND — CORE APPLICATION CONFIGURATION (SPRING BOOT 3.3.5 / JAVA 21)
+# ==============================================================================================
+# ARCHITECTURAL DECISIONS & ENGINEERING RATIONALE:
+#
+# 1. HIKARI CONNECTION POOL SIZING:
+#    - maximum-pool-size: 10 is calibrated for containerized environments to prevent DB connection
+#      exhaustion. Following the Postgres formula: connections = (2 * CPU_CORES) + DISK_SPINDLES.
+#    - connection-timeout: 20000 ms avoids hanging HTTP threads if the database is under load.
+#
+# 2. OPEN SESSION IN VIEW (OSIV) DISABLED:
+#    - spring.jpa.open-in-view: false is a critical senior architectural pattern. Keeping OSIV on
+#      masks N+1 query problems and holds DB connections open during HTTP serialization. Disabling
+#      it forces explicit transactional boundaries in Service classes via @Transactional.
+#
+# 3. SCHEMA MIGRATION STRATEGY:
+#    - spring.jpa.hibernate.ddl-auto: validate guarantees that Hibernate NEVER alters production schemas.
+#    - Flyway (classpath:db/migration) owns 100% of schema DDL migrations (V1) and seed data (V2),
+#      guaranteeing reproducible, auditable, and version-controlled database evolution.
+#
+# 4. OBSERVABILITY & METRICS:
+#    - Actuator endpoints (health, prometheus, metrics) feed Prometheus every 5 seconds.
+#    - percentiles-histogram: true enables computation of p50, p95, and p99 latency quantiles.
+# ==============================================================================================
+
 server:
+  # Port binding with container override fallback
   port: ${PORT:8080}
   servlet:
     context-path: /
   error:
+    # RFC 7807 problem details error payload includes descriptive exception message
     include-message: always
 
 spring:
   application:
     name: buywise-backend
+
+  # --------------------------------------------------------------------------------------------
+  # RELATIONAL DATABASE & HIKARICP CONNECTION POOL
+  # --------------------------------------------------------------------------------------------
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/buywise}
     username: ${SPRING_DATASOURCE_USERNAME:buywise}
     password: ${SPRING_DATASOURCE_PASSWORD:buywise}
     driver-class-name: org.postgresql.Driver
     hikari:
+      # Max concurrent physical DB connections per container replica
       maximum-pool-size: 10
+      # Minimum idle connections kept warm in pool
       minimum-idle: 2
+      # Max time a connection can sit idle before being retired (30 seconds)
       idle-timeout: 30000
+      # Max time client thread waits for a pooled connection before throwing SQLException (20 seconds)
       connection-timeout: 20000
+
+  # --------------------------------------------------------------------------------------------
+  # JPA & HIBERNATE ORM ENGINE
+  # --------------------------------------------------------------------------------------------
   jpa:
     hibernate:
+      # Schema is validated against JPA entity mappings at startup; never auto-created or dropped
       ddl-auto: validate
+    # Disables OSIV to enforce clean transactional boundaries and prevent lazy-loading leaks in controllers
     open-in-view: false
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
+
+  # --------------------------------------------------------------------------------------------
+  # DATABASE VERSION CONTROL — FLYWAY
+  # --------------------------------------------------------------------------------------------
   flyway:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+
+  # --------------------------------------------------------------------------------------------
+  # MULTIPART FILE UPLOAD LIMITS (RECEIPTS, INVOICES, WARRANTIES)
+  # --------------------------------------------------------------------------------------------
   servlet:
     multipart:
       max-file-size: 15MB
       max-request-size: 15MB
 
+# ----------------------------------------------------------------------------------------------
+# DOMAIN & SECURITY CONFIGURATION
+# ----------------------------------------------------------------------------------------------
 buywise:
   jwt:
+    # HMAC-SHA256 256-bit secret key used by JwtTokenProvider to sign stateless Bearer tokens
     secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
-    expiration-ms: 86400000 # 24 hours
+    # Token lifespan: 24 hours (86,400,000 ms)
+    expiration-ms: 86400000
   groq:
+    # LLM inference API configuration (Groq ultra-fast LPU inference)
     api-key: ${GROQ_API_KEY:}
     model: ${GROQ_MODEL:openai/gpt-oss-20b}
     fallback-model: ${GROQ_FALLBACK_MODEL:openai/gpt-oss-120b}
@@ -49,11 +104,15 @@ buywise:
     max-retries: 3
     retry-delay-ms: 1000
   storage:
+    # Directory where uploaded receipt PDFs and images are stored locally
     upload-dir: ${UPLOAD_DIR:./uploads}
   demo:
     seed-on-startup: true
     default-currency: MAD
 
+# ----------------------------------------------------------------------------------------------
+# OPENAPI & SWAGGER UI DOCUMENTATION (SPRINGDOC)
+# ----------------------------------------------------------------------------------------------
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -62,6 +121,9 @@ springdoc:
     tags-sorter: alpha
     operations-sorter: method
 
+# ----------------------------------------------------------------------------------------------
+# ACTUATOR & PROMETHEUS METRICS TELEMETRY
+# ----------------------------------------------------------------------------------------------
 management:
   endpoints:
     web:

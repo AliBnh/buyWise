@@ -4,6 +4,13 @@ import { describe, it, expect } from 'vitest';
 import { CurrencyProvider, useCurrency } from '../context/CurrencyContext';
 import { AuthProvider } from '../context/AuthContext';
 
+/**
+ * Custom Hook Test Suite for {@link useCurrency} and {@link CurrencyProvider}.
+ * 
+ * Demonstrates:
+ * - renderHook Testing Pattern: Tests headless React custom hooks without rendering full DOM fixtures.
+ * - Multi-Currency Normalization: Verifies real-time conversion rates (MAD base, EUR, USD) and currency symbol formatting.
+ */
 const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <AuthProvider>
     <CurrencyProvider>{children}</CurrencyProvider>

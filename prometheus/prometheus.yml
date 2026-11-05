@@ -1,12 +1,35 @@
+# ==============================================================================================
+# PROMETHEUS METRICS COLLECTION ENGINE CONFIGURATION
+# ==============================================================================================
+# ARCHITECTURAL DECISIONS & ENGINEERING RATIONALE:
+#
+# 1. PULL-BASED TELEMETRY ARCHITECTURE:
+#    - Prometheus uses an active HTTP scraping model ("Pull") rather than receiving push metrics.
+#    - Scrapes the Micrometer-instrumented endpoint: http://backend:8080/actuator/prometheus.
+#    - Advantages: Automatic liveness detection (if the backend crashes, scraping immediately fails,
+#      triggering an alert), zero client-side buffering bottlenecks, and predictable scrape load.
+#
+# 2. SAMPLING FREQUENCY & EVALUATION RESOLUTION:
+#    - scrape_interval: 5s provides near-real-time visibility into arithmetic calculations,
+#      LLM latency timers (Timer quantiles), and user interaction counts.
+# ==============================================================================================
+
 global:
+  # How frequently Prometheus scrapes targets from configured jobs
   scrape_interval: 5s
+  # How frequently alert and recording rules are evaluated
   evaluation_interval: 5s
 
 scrape_configs:
+  # --------------------------------------------------------------------------------------------
+  # JOB: Spring Boot Backend Application (Micrometer + Prometheus MeterRegistry)
+  # --------------------------------------------------------------------------------------------
   - job_name: 'buywise-backend'
+    # Default Spring Boot Actuator Prometheus metrics exposition path
     metrics_path: '/actuator/prometheus'
     scrape_interval: 5s
     static_configs:
+      # Internal Docker bridge network hostname:port
       - targets: ['backend:8080']
         labels:
           application: 'buywise-backend'

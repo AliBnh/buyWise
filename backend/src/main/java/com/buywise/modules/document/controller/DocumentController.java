@@ -20,6 +20,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * REST controller managing document ingestion, binary asset streaming, and Human-in-the-Loop (HITL) fact verification.
+ * 
+ * Demonstrates:
+ * - Multipart Streaming Ingestion: Handles binary multipart upload with size limits (15MB) and mime-type validation.
+ * - Human-in-the-Loop (HITL) Design Pattern: Directly enables consumers to inspect, approve, or correct AI-extracted attributes.
+ * - Path Traversal & IDOR Defense: Verifies tenant ownership before resolving server filesystem storage paths.
+ */
 @RestController
 @RequestMapping("/api/v1/documents")
 @RequiredArgsConstructor
@@ -28,6 +36,15 @@ public class DocumentController {
 
     private final DocumentStorageService storageService;
 
+    /**
+     * Uploads an invoice, receipt, or warranty PDF/image, triggers OCR/parsing, and extracts structured purchase facts.
+     * 
+     * @param file Binary file payload received via multipart/form-data.
+     * @param documentType Optional classification hint (RECEIPT, INVOICE, WARRANTY).
+     * @param purchaseId Optional linked purchase identifier.
+     * @param comparisonId Optional linked comparison identifier.
+     * @return HTTP 201 CREATED with stored document metadata and extraction task status.
+     */
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload a document (receipt, invoice, warranty) for storage and AI fact extraction")
     public ResponseEntity<DocumentUploadResponse> uploadDocument(
@@ -40,18 +57,35 @@ public class DocumentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /**
+     * Lists all documents uploaded by the calling user.
+     * 
+     * @return HTTP 200 OK with document summaries.
+     */
     @GetMapping
     @Operation(summary = "List all documents uploaded by the current user")
     public ResponseEntity<List<DocumentUploadResponse>> getUserDocuments() {
         return ResponseEntity.ok(storageService.getUserDocuments());
     }
 
+    /**
+     * Retrieves full document metadata including raw text excerpt, extraction status, and all extracted semantic facts.
+     * 
+     * @param id Target document ID.
+     * @return HTTP 200 OK with detailed document and fact response.
+     */
     @GetMapping("/{id}")
     @Operation(summary = "Get detailed document metadata and all extracted facts with confidence scores")
     public ResponseEntity<DocumentDetailResponse> getDocumentDetail(@PathVariable Long id) {
         return ResponseEntity.ok(storageService.getDocumentDetail(id));
     }
 
+    /**
+     * Streams the stored binary file back to the client as an attachment, with filename sanitization.
+     * 
+     * @param id Document ID.
+     * @return HTTP 200 OK with binary octet stream and Content-Disposition header.
+     */
     @GetMapping("/{id}/download")
     @Operation(summary = "Download stored document binary securely")
     public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) {
@@ -61,6 +95,14 @@ public class DocumentController {
                 .body(resource);
     }
 
+    /**
+     * Approves, modifies, or rejects an AI-extracted fact, implementing the Human-in-the-Loop (HITL) architectural pattern.
+     * Optionally propagates verified values to linked purchase or offer records.
+     * 
+     * @param factId Unique identifier of the extracted fact.
+     * @param request Verification status and optional user-edited value.
+     * @return HTTP 200 OK with updated fact verification status.
+     */
     @PatchMapping("/facts/{factId}/verify")
     @Operation(summary = "Approve, correct, or reject an AI-extracted fact (Human-in-the-Loop)")
     public ResponseEntity<ExtractedFactDto> verifyFact(
@@ -69,6 +111,12 @@ public class DocumentController {
         return ResponseEntity.ok(storageService.verifyFact(factId, request));
     }
 
+    /**
+     * Deletes stored physical document file and cascades deletion of extracted facts.
+     * 
+     * @param id Document ID.
+     * @return HTTP 204 NO CONTENT.
+     */
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete uploaded document and its extracted facts")
     public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {

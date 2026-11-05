@@ -4,12 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Concrete processor for PDF and image documents.
  * 
- * Provides extraction of text payloads and structural descriptors.
+ * Demonstrates:
+ * - Strategy Implementation: Encapsulates byte stream scanning and printable character extraction for PDF and image formats.
+ * - Format Support: Detects application/pdf and image/* MIME types.
+ * - Resilient Text Fallback: If OCR/stream has sparse printable characters (<30 bytes), generates a structured
+ *   attachment placeholder to prevent blank document states.
  */
 @Slf4j
 @Component
@@ -37,7 +40,7 @@ public class PdfAndImageDocumentProcessor implements DocumentProcessor {
         int printableCount = 0;
 
         for (byte b : bytes) {
-            if (b >= 32 && b <= 126) { // Printable ASCII
+            if (b >= 32 && b <= 126) { // Printable ASCII range
                 currentLine.append((char) b);
                 printableCount++;
             } else if (b == '\n' || b == '\r') {

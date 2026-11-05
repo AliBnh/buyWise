@@ -5,6 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Authentication response payload returning the signed JWT access token and user identity profile.
+ * 
+ * Demonstrates:
+ * - RFC 6750 Bearer Token Standard: Sets tokenType to "Bearer" for HTTP Authorization headers.
+ * - Client Session Bootstrap: Packages user preferences (preferredCurrency) to initialize client frontend state.
+ */
 @Data
 @Builder
 @NoArgsConstructor
